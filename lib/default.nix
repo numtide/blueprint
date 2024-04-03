@@ -43,12 +43,24 @@ let
     path: fn:
     let
       entries = builtins.readDir path;
-      # TODO: is it possible to use symlinks as aliases? For example to set the default package.
+
+      # Get paths to directories
       onlyDirs = lib.filterAttrs (name: type: type == "directory") entries;
-      # add the full path as a value
-      withPaths = lib.mapAttrs (name: _: path + "/${name}") onlyDirs;
+      dirPaths = lib.mapAttrs (name: _: path + "/${name}") onlyDirs;
+
+      # Get paths to nix files, where the name is the basename of the file without the .nix extension
+      nixPaths = builtins.removeAttrs (lib.mapAttrs' (name: type:
+        let nixName = builtins.match "(.*)\\.nix" name; in
+        {
+          name = if type == "directory" || nixName == null then "__junk" else (builtins.head nixName);
+          value = path + "/${name}";
+        })
+        entries) ["__junk"];
+
+      # Have the nix files take precedence over the directories
+      combined = dirPaths // nixPaths;
     in
-    lib.optionalAttrs (builtins.pathExists path) (fn withPaths);
+    lib.optionalAttrs (builtins.pathExists path) (fn combined);
 
   # Prefixes all the keys of an attrset with the given prefix
   withPrefix =
@@ -98,7 +110,7 @@ let
           lib.mapAttrs loadHost entries
         );
 
-        hostsByCategory = lib.mapAttrs (_: host: lib.listToAttrs hosts) (
+        hostsByCategory = lib.mapAttrs (_: hosts: lib.listToAttrs hosts) (
           lib.groupBy (
             x: if isNixOS x.value then "nixosConfigurations" else throw "${x.name} type not supported"
           ) (lib.attrsToList hosts)
@@ -106,9 +118,12 @@ let
 
         modules = {
           common = importDir (src + "/modules/common") lib.id;
+          darwin = importDir (src + "/modules/darwin") lib.id;
+          home = importDir (src + "/modules/home") lib.id;
           nixos = importDir (src + "/modules/nixos") lib.id;
         };
       in
+      # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
       {
         # FIXME: make this configurable
         formatter = eachSystem ({ pkgs, ... }: pkgs.nixfmt-rfc-style);
@@ -141,7 +156,9 @@ let
         nixosConfigurations = hostsByCategory.nixosConfigurations or { };
 
         inherit modules;
-
+        darwinModules = modules.darwin;
+        homeModules = modules.home;
+        # TODO: how to extract NixOS tests?
         nixosModules = modules.nixos;
 
         templates = importDir (src + "/templates") (
