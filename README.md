@@ -40,10 +40,10 @@ What it's bad for:
 * supports overridable systems (see nix-systems)
 * default flake checks
 * NixOS configurations
+* NixOS modules
 
 ## TODO
 
-* NixOS modules
 * Darwin configurations
 * Darwin modules
 * Home configurations

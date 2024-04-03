@@ -103,6 +103,11 @@ let
             x: if isNixOS x.value then "nixosConfigurations" else throw "${x.name} type not supported"
           ) (lib.attrsToList hosts)
         );
+
+        modules = {
+          common = importDir (src + "/modules/common") lib.id;
+          nixos = importDir (src + "/modules/nixos") lib.id;
+        };
       in
       {
         # FIXME: make this configurable
@@ -134,6 +139,10 @@ let
         );
 
         nixosConfigurations = hostsByCategory.nixosConfigurations or { };
+
+        inherit modules;
+
+        nixosModules = modules.nixos;
 
         templates = importDir (src + "/templates") (
           entries:
