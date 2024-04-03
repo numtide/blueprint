@@ -39,6 +39,7 @@ let
   # Imports the path and pass the `args` to it if it exists, otherwise, return an empty attrset.
   tryImport = path: args: ifDir path (import path args);
 
+  # Maps all the nix files and folders in a directory to name -> path.
   importDir =
     path: fn:
     let

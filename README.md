@@ -41,11 +41,11 @@ What it's bad for:
 * default flake checks
 * NixOS configurations
 * NixOS modules
+* Darwin modules
 
 ## TODO
 
 * Darwin configurations
-* Darwin modules
 * Home configurations
 
 * `bp` CLI to:
