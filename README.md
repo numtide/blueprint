@@ -39,10 +39,10 @@ What it's bad for:
 * packages folder
 * supports overridable systems (see nix-systems)
 * default flake checks
+* NixOS configurations
 
 ## TODO
 
-* NixOS configurations
 * NixOS modules
 * Darwin configurations
 * Darwin modules
@@ -68,7 +68,7 @@ In order to avoid name clashes, avoid loading inputs with the following names:
 
 [$ ./example/flake.nix](./example/flake.nix)
 
-```
+```nix
 {
   description = "my flake";
 

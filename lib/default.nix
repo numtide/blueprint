@@ -16,17 +16,19 @@ let
         system:
         let
           # resolve the packages for each input
-          inputs' = lib.mapAttrs (
+          perSystem = lib.mapAttrs (
             _: flake: (flake.packages or flake.legacyPackages or { }).${system} or { }
           ) inputs;
         in
-        inputs'
-        // {
+        {
           # add system as a special, non-overridable value
-          inherit system;
+          inherit inputs perSystem system;
+
+          # add shortcut for self
+          self = inputs.self;
 
           # handle nixpkgs specially.
-          pkgs = inputs'.nixpkgs;
+          pkgs = perSystem.nixpkgs;
         }
       );
     in
@@ -58,6 +60,8 @@ let
       }
     );
 
+  isNixOS = attrs: (attrs.config.system or { }) ? nixos;
+
   # Create a new flake blueprint
   mkFlake =
     { inputs }:
@@ -66,10 +70,43 @@ let
       let
         eachSystem = mkEachSystem inputs;
         src = inputs.self;
+
+        hosts = importDir (src + "/hosts") (
+          entries:
+          let
+            # Something to pass to all the systems
+            specialArgs = {
+              inherit inputs;
+              # shortcut for self
+              self = inputs.self;
+            };
+
+            loadNixOS = path:
+              # FIXME: we assume it's using the nixpkgs input. How do you switch to another one?
+              inputs.nixpkgs.lib.nixosSystem {
+                modules = [ path ];
+                inherit specialArgs;
+              };
+
+            loadHost =
+              name: path:
+              if builtins.pathExists (path + "/configuration.nix") then
+                loadNixOS (path + "/configuration.nix")
+              else
+                throw "${name} does not have a configuration.nix";
+          in
+          lib.mapAttrs loadHost entries
+        );
+
+        hostsByCategory = lib.mapAttrs (_: host: lib.listToAttrs hosts) (
+          lib.groupBy (
+            x: if isNixOS x.value then "nixosConfigurations" else throw "${x.name} type not supported"
+          ) (lib.attrsToList hosts)
+        );
       in
       {
         # FIXME: make this configurable
-        formatter = eachSystem ({ nixpkgs, ... }: nixpkgs.nixfmt-rfc-style);
+        formatter = eachSystem ({ pkgs, ... }: pkgs.nixfmt-rfc-style);
 
         lib = tryImport (src + /lib) inputs;
 
@@ -96,6 +133,8 @@ let
           eachSystem (args: lib.mapAttrs (pname: path: import path (args // { inherit pname; })) entries)
         );
 
+        nixosConfigurations = hostsByCategory.nixosConfigurations or { };
+
         templates = importDir (src + "/templates") (
           entries:
           lib.mapAttrs (name: path: {
@@ -109,6 +148,7 @@ let
           { system, ... }:
           lib.mergeAttrsList [
             # add all the supported packages to checks
+            # FIXME: also add all the meta.tests attributes
             (withPrefix "pkgs-" (
               lib.filterAttrs (
                 _: x: if x.meta ? platforms then lib.elem system x.meta.platforms else true # keep every package that has no meta.platforms
@@ -116,6 +156,12 @@ let
             ))
             # build all the devshells
             (withPrefix "devshell-" inputs.self.devShells.${system})
+            # add nixos system closures to checks
+            (withPrefix "nixos-" (
+              lib.mapAttrs (_: x: x.config.system.build.toplevel) (
+                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or {})
+              )
+            ))
           ]
         );
       }
