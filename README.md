@@ -42,6 +42,7 @@ What it's bad for:
 * NixOS configurations
 * NixOS modules
 * Darwin modules
+* devshell
 
 ## TODO
 

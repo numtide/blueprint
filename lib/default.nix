@@ -50,13 +50,16 @@ let
       dirPaths = lib.mapAttrs (name: _: path + "/${name}") onlyDirs;
 
       # Get paths to nix files, where the name is the basename of the file without the .nix extension
-      nixPaths = builtins.removeAttrs (lib.mapAttrs' (name: type:
-        let nixName = builtins.match "(.*)\\.nix" name; in
+      nixPaths = builtins.removeAttrs (lib.mapAttrs' (
+        name: type:
+        let
+          nixName = builtins.match "(.*)\\.nix" name;
+        in
         {
           name = if type == "directory" || nixName == null then "__junk" else (builtins.head nixName);
           value = path + "/${name}";
-        })
-        entries) ["__junk"];
+        }
+      ) entries) [ "__junk" ];
 
       # Have the nix files take precedence over the directories
       combined = dirPaths // nixPaths;
@@ -94,7 +97,8 @@ let
               self = inputs.self;
             };
 
-            loadNixOS = path:
+            loadNixOS =
+              path:
               # FIXME: we assume it's using the nixpkgs input. How do you switch to another one?
               inputs.nixpkgs.lib.nixosSystem {
                 modules = [ path ];
@@ -129,24 +133,20 @@ let
         # FIXME: make this configurable
         formatter = eachSystem ({ pkgs, ... }: pkgs.nixfmt-rfc-style);
 
-        lib = tryImport (src + /lib) inputs;
+        lib = tryImport (src + "/lib") inputs;
 
         # expose the functor to the top-level
         # FIXME: only if it exists
         __functor = x: inputs.self.lib.__functor x;
 
-        # FIXME: make this extensible
         devShells = eachSystem (
-          { pkgs, ... }:
-          {
-            default = pkgs.mkShellNoCC {
-              packages = [
-                # Some default tooling everybody should have
-                pkgs.nix-init
-                pkgs.nix-update
-              ];
-            };
-          }
+          args:
+          if builtins.pathExists (src + "/devshell.nix") then
+            # FIXME: do we want to support multiple shells?
+            { default = import (src + "/devshell.nix") args; }
+          else
+            # TODO: what would a default shell look like?
+            { }
         );
 
         packages = importDir (src + "/pkgs") (
@@ -179,14 +179,14 @@ let
             (withPrefix "pkgs-" (
               lib.filterAttrs (
                 _: x: if x.meta ? platforms then lib.elem system x.meta.platforms else true # keep every package that has no meta.platforms
-              ) inputs.self.packages.${system}
+              ) (inputs.self.packages.${system} or { })
             ))
             # build all the devshells
-            (withPrefix "devshell-" inputs.self.devShells.${system})
+            (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
             # add nixos system closures to checks
             (withPrefix "nixos-" (
               lib.mapAttrs (_: x: x.config.system.build.toplevel) (
-                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or {})
+                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
               )
             ))
           ]
