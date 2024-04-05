@@ -80,12 +80,17 @@ let
 
   # Create a new flake blueprint
   mkFlake =
-    { inputs }:
+    {
+      # Pass the flake inputs to the blueprint
+      inputs,
+      # Load the blueprint from this path
+      prefix ? "",
+    }:
     (
       { inputs }:
       let
         eachSystem = mkEachSystem inputs;
-        src = inputs.self;
+        src = if prefix == "" then inputs.self else "${inputs.self}/${prefix}";
 
         hosts = importDir (src + "/hosts") (
           entries:
