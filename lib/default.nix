@@ -7,7 +7,11 @@ let
   #
   # Designed to work with nix-systems
   mkEachSystem =
-    { systems, nixpkgs, ... }@inputs:
+    {
+      inputs,
+      systems,
+      nixpkgs,
+    }:
     let
       # make compatible with github:nix-systems/default
       sys = if lib.isList systems then systems else import systems;
@@ -28,7 +32,14 @@ let
           self = inputs.self;
 
           # handle nixpkgs specially.
-          pkgs = perSystem.nixpkgs;
+          pkgs =
+            if (nixpkgs.config or { }) == { } then
+              perSystem.nixpkgs
+            else
+              import inputs.nixpkgs {
+                inherit system;
+                config = nixpkgs.config;
+              };
         }
       );
     in
@@ -85,11 +96,17 @@ let
       inputs,
       # Load the blueprint from this path
       prefix ? "",
+      # Used to configure nixpkgs
+      nixpkgs ? {
+        config = { };
+      },
+      # The systems to generate the flake for
+      systems ? inputs.systems,
     }:
     (
       { inputs }:
       let
-        eachSystem = mkEachSystem inputs;
+        eachSystem = mkEachSystem { inherit inputs nixpkgs systems; };
         src = if prefix == "" then inputs.self else "${inputs.self}/${prefix}";
 
         hosts = importDir (src + "/hosts") (
