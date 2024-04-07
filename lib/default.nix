@@ -101,7 +101,7 @@ let
         config = { };
       },
       # The systems to generate the flake for
-      systems ? inputs.systems,
+      systems ? inputs.systems or bpInputs.systems,
     }:
     (
       { inputs }:
