@@ -101,7 +101,7 @@ let
       # Pass the flake inputs to the blueprint
       inputs,
       # Load the blueprint from this path
-      prefix ? "",
+      prefix ? null,
       # Used to configure nixpkgs
       nixpkgs ? {
         config = { };
@@ -113,7 +113,16 @@ let
       { inputs }:
       let
         eachSystem = mkEachSystem { inherit inputs nixpkgs systems; };
-        src = if prefix == "" then inputs.self else "${inputs.self}/${prefix}";
+
+        src =
+          if prefix == null then
+            inputs.self
+          else if builtins.isPath prefix then
+            prefix
+          else if builtins.isString prefix then
+            "${inputs.self}/${prefix}"
+          else
+            throw "${builtins.typeOf prefix} is not supported for the prefix";
 
         hosts = importDir (src + "/hosts") (
           entries:
@@ -159,7 +168,9 @@ let
       # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
       {
         # Pick self.packages.${system}.formatter or fallback on nixfmt-rfc-style
-        formatter = eachSystem ({ pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style);
+        formatter = eachSystem (
+          { pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style
+        );
 
         lib = tryImport (src + "/lib") inputs;
 
