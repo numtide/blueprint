@@ -89,6 +89,12 @@ let
 
   isNixOS = attrs: (attrs.config.system or { }) ? nixos;
 
+  filterPlatforms =
+    system: attrs:
+    lib.filterAttrs (
+      _: x: if x.meta ? platforms then lib.elem system x.meta.platforms else true # keep every package that has no meta.platforms
+    ) attrs;
+
   # Create a new flake blueprint
   mkFlake =
     {
@@ -196,12 +202,19 @@ let
         checks = eachSystem (
           { system, ... }:
           lib.mergeAttrsList [
-            # add all the supported packages to checks
-            # FIXME: also add all the meta.tests attributes
+            # add all the supported packages, and their meta.tests to checks
             (withPrefix "pkgs-" (
-              lib.filterAttrs (
-                _: x: if x.meta ? platforms then lib.elem system x.meta.platforms else true # keep every package that has no meta.platforms
-              ) (inputs.self.packages.${system} or { })
+              lib.concatMapAttrs (
+                pname: package:
+                {
+                  ${pname} = package;
+                }
+                # also add the meta.tests to the checks
+                // (lib.mapAttrs' (tname: test: {
+                  name = "${pname}-${tname}";
+                  value = test;
+                }) (filterPlatforms system (package.meta.tests or { })))
+              ) (filterPlatforms system (inputs.self.packages.${system} or { }))
             ))
             # build all the devshells
             (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
