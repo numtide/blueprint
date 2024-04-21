@@ -158,8 +158,8 @@ let
       in
       # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
       {
-        # FIXME: make this configurable
-        formatter = eachSystem ({ pkgs, ... }: pkgs.nixfmt-rfc-style);
+        # Pick self.packages.${system}.formatter or fallback on nixfmt-rfc-style
+        formatter = eachSystem ({ pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style);
 
         lib = tryImport (src + "/lib") inputs;
 
