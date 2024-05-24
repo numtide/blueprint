@@ -29,7 +29,8 @@ let
           inherit inputs perSystem system;
 
           # add shortcut for self
-          self = inputs.self;
+          self = throw "self was renamed to flake";
+          flake = inputs.self;
 
           # handle nixpkgs specially.
           pkgs =
@@ -131,7 +132,8 @@ let
             specialArgs = {
               inherit inputs;
               # shortcut for self
-              self = inputs.self;
+              self = throw "self was renamed to flake";
+              flake = inputs.self;
             };
 
             loadNixOS =
