@@ -1,7 +1,7 @@
 {
   pname,
   pkgs,
-  self,
+  flake,
   ...
 }:
 let
@@ -19,7 +19,7 @@ let
           shift
           # Allow running the command as a user
           export SUDO_USER=1
-          echo ${pkgs.nixos-rebuild}/bin/nixos-rebuild --flake ${self} "$@"
+          echo ${pkgs.nixos-rebuild}/bin/nixos-rebuild --flake ${flake} "$@"
           ;;
         *)
           echo "Usage: ${pname} [switch]"
