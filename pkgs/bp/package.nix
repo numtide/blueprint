@@ -1,12 +1,11 @@
 {
-  pname,
-  pkgs,
-  flake,
-  ...
+  nixos-rebuild,
+  runCommand,
+  writeShellApplication,
 }:
 let
-  pb = pkgs.writeShellApplication {
-    name = pname;
+  pb = writeShellApplication {
+    name = "bp";
     runtimeInputs = [
 
     ];
@@ -19,10 +18,10 @@ let
           shift
           # Allow running the command as a user
           export SUDO_USER=1
-          echo ${pkgs.nixos-rebuild}/bin/nixos-rebuild --flake ${flake} "$@"
+          echo ${nixos-rebuild}/bin/nixos-rebuild --flake . switch "$@"
           ;;
         *)
-          echo "Usage: ${pname} [switch]"
+          echo "Usage: bp [switch]"
           ;;
       esac
     '';
@@ -30,7 +29,7 @@ let
     meta = {
       description = "ignore me, this is not ready";
 
-      tests.does-it-run = pkgs.runCommand "${pname}-does-it-run" { } ''
+      tests.does-it-run = runCommand "bp-does-it-run" { } ''
         ${pb}/bin/bp --help > $out
       '';
     };
