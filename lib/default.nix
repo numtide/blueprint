@@ -260,6 +260,12 @@ let
                 lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
               )
             ))
+            # add darwin system closures to checks
+            (withPrefix "darwin-" (
+              lib.mapAttrs (_: x: x.system) (
+                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
+              )
+            ))
           ]
         );
       }
