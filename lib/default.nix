@@ -59,7 +59,10 @@ let
 
       # Get paths to directories
       onlyDirs = lib.filterAttrs (name: type: type == "directory") entries;
-      dirPaths = lib.mapAttrs (name: _: path + "/${name}") onlyDirs;
+      dirPaths = lib.mapAttrs (name: type: {
+        path = path + "/${name}";
+        inherit type;
+      }) onlyDirs;
 
       # Get paths to nix files, where the name is the basename of the file without the .nix extension
       nixPaths = builtins.removeAttrs (lib.mapAttrs' (
@@ -69,7 +72,10 @@ let
         in
         {
           name = if type == "directory" || nixName == null then "__junk" else (builtins.head nixName);
-          value = path + "/${name}";
+          value = {
+            path = path + "/${name}";
+            type = type;
+          };
         }
       ) entries) [ "__junk" ];
 
@@ -77,6 +83,8 @@ let
       combined = dirPaths // nixPaths;
     in
     lib.optionalAttrs (builtins.pathExists path) (fn combined);
+
+  entriesPath = entries: lib.mapAttrs (name: { path, type }: path);
 
   # Prefixes all the keys of an attrset with the given prefix
   withPrefix =
@@ -159,7 +167,8 @@ let
               };
 
             loadHost =
-              name: path:
+              name:
+              { path, type }:
               if builtins.pathExists (path + "/configuration.nix") then
                 loadNixOS (path + "/configuration.nix")
               else if builtins.pathExists (path + "/darwin-configuration.nix") then
@@ -183,10 +192,10 @@ let
         );
 
         modules = {
-          common = importDir (src + "/modules/common") lib.id;
-          darwin = importDir (src + "/modules/darwin") lib.id;
-          home = importDir (src + "/modules/home") lib.id;
-          nixos = importDir (src + "/modules/nixos") lib.id;
+          common = importDir (src + "/modules/common") entriesPath;
+          darwin = importDir (src + "/modules/darwin") entriesPath;
+          home = importDir (src + "/modules/home") entriesPath;
+          nixos = importDir (src + "/modules/nixos") entriesPath;
         };
       in
       # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
@@ -214,7 +223,17 @@ let
 
         packages = importDir (src + "/pkgs") (
           entries:
-          eachSystem (args: lib.mapAttrs (pname: path: import path (args // { inherit pname; })) entries)
+          eachSystem (
+            { pkgs, ... }@args:
+            lib.mapAttrs (
+              pname:
+              { path, type }:
+              if type != "directory" || !builtins.pathExists (path + "/default.nix") then
+                pkgs.callPackage "${toString path}/package.nix" { }
+              else
+                import path (args // { inherit pname; })
+            ) entries
+          )
         );
 
         darwinConfigurations = hostsByCategory.darwinConfigurations or { };
@@ -228,11 +247,15 @@ let
 
         templates = importDir (src + "/templates") (
           entries:
-          lib.mapAttrs (name: path: {
-            path = path;
-            # FIXME: how can we add something more meaningful?
-            description = name;
-          }) entries
+          lib.mapAttrs (
+            name:
+            { path, type }:
+            {
+              path = path;
+              # FIXME: how can we add something more meaningful?
+              description = name;
+            }
+          ) entries
         );
 
         checks = eachSystem (
