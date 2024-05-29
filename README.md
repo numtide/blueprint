@@ -42,11 +42,11 @@ What it's bad for:
 * NixOS configurations
 * NixOS modules
 * Darwin modules
+* Darwin configurations
 * devshell
 
 ## TODO
 
-* Darwin configurations
 * Home configurations
 
 * `bp` CLI to:

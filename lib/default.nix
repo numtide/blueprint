@@ -88,7 +88,9 @@ let
       }
     );
 
-  isNixOS = attrs: (attrs.config.system or { }) ? nixos;
+  isNixOS = attrs: attrs.class or "" == "nixos";
+
+  isNixDarwin = attrs: attrs.class or "" == "nix-darwin";
 
   filterPlatforms =
     system: attrs:
@@ -144,19 +146,39 @@ let
                 inherit specialArgs;
               };
 
+            loadNixDarwin =
+              path:
+              # FIXME: we assume it's using the nix-darwin input. How do you switch to another one?
+              (inputs.nix-darwin.lib.darwinSystem {
+                modules = [ path ];
+                inherit specialArgs;
+              })
+              // {
+                # FIXME: upstream https://github.com/NixOS/nixpkgs/pull/197547
+                class = "nix-darwin";
+              };
+
             loadHost =
               name: path:
               if builtins.pathExists (path + "/configuration.nix") then
                 loadNixOS (path + "/configuration.nix")
+              else if builtins.pathExists (path + "/darwin-configuration.nix") then
+                loadNixDarwin (path + "/darwin-configuration.nix")
               else
-                throw "${name} does not have a configuration.nix";
+                throw "host '${name}' does not have a configuration";
           in
           lib.mapAttrs loadHost entries
         );
 
         hostsByCategory = lib.mapAttrs (_: hosts: lib.listToAttrs hosts) (
           lib.groupBy (
-            x: if isNixOS x.value then "nixosConfigurations" else throw "${x.name} type not supported"
+            x:
+            if isNixOS x.value then
+              "nixosConfigurations"
+            else if isNixDarwin x.value then
+              "darwinConfigurations"
+            else
+              throw "host '${x.name}' of class '${x.value.class or "unknown"}' not supported"
           ) (lib.attrsToList hosts)
         );
 
@@ -195,6 +217,7 @@ let
           eachSystem (args: lib.mapAttrs (pname: path: import path (args // { inherit pname; })) entries)
         );
 
+        darwinConfigurations = hostsByCategory.darwinConfigurations or { };
         nixosConfigurations = hostsByCategory.nixosConfigurations or { };
 
         inherit modules;
@@ -235,6 +258,12 @@ let
             (withPrefix "nixos-" (
               lib.mapAttrs (_: x: x.config.system.build.toplevel) (
                 lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
+              )
+            ))
+            # add darwin system closures to checks
+            (withPrefix "darwin-" (
+              lib.mapAttrs (_: x: x.system) (
+                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
               )
             ))
           ]
