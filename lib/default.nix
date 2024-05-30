@@ -84,7 +84,7 @@ let
     in
     lib.optionalAttrs (builtins.pathExists path) (fn combined);
 
-  entriesPath = entries: lib.mapAttrs (name: { path, type }: path);
+  entriesPath = lib.mapAttrs (name: { path, type }: path);
 
   # Prefixes all the keys of an attrset with the given prefix
   withPrefix =
