@@ -228,7 +228,7 @@ let
             lib.mapAttrs (
               pname:
               { path, type }:
-              if type != "directory" || !builtins.pathExists (path + "/default.nix") then
+              if type == "directory" && !builtins.pathExists (path + "/default.nix") then
                 pkgs.callPackage "${toString path}/package.nix" { }
               else
                 import path (args // { inherit pname; })
