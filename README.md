@@ -1,4 +1,4 @@
-# blueprint - lean flake
+# blueprint - flakes made easy
 
 > **STATUS: experimental**
 
@@ -48,14 +48,13 @@ What it's bad for:
 ## TODO
 
 * Home configurations
-
+* GitHub Actions integration
 * `bp` CLI to:
     * login Nix to github
     * add/remove inputs
     * update inputs
     * flatten inputs to automate the input follows
 
-* GitHub Actions integration
 
 ## Blacklisted inputs
 
