@@ -28,6 +28,12 @@ Those take the following arguments:
 
 ## Mapping
 
+### `formatter.nix`
+
+Define a formatter for the flake. If not defined, we use `perSystem.self.formatter` or default to `pkgs.nixfmt-rfc-style`.
+
+Called with the [per-system](#per-system) attributes.
+
 ### `devshell.nix`
 
 Contains the developer shell if specified.
