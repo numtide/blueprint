@@ -27,40 +27,43 @@ In some ways, this is the spiritual successor to `flake-utils`, my first
 attempt at making flakes easier to use.
 
 What it's good for:
-* Home and SME configurations
-* Package sets
+
+-   Home and SME configurations
+-   Package sets
 
 What it's bad for:
-* Complicated setups (although we try to provide gracefull fallback)
-* Developer environments (see devenv.sh)
+
+-   Complicated setups (although we try to provide gracefull fallback)
+-   Developer environments (see devenv.sh)
 
 ## Design principles
 
-* KISS. We don't need complicated module systems with infinite recursions.
-* 1:1 mapping. Keep the mapping between attributes predictable.
-* Think about user workflows.
+-   KISS. We don't need complicated module systems with infinite recursions.
+-   1:1 mapping. Keep the mapping between attributes predictable.
+-   Think about user workflows.
 
 ## Features
 
-* default formatter
-* lib folder
-* templates folder
-* packages folder
-* supports overridable systems (see nix-systems)
-* default flake checks
-* NixOS configurations
-* NixOS modules
-* Darwin modules
-* Darwin configurations
-* devshell
+-   default formatter
+-   lib folder
+-   templates folder
+-   packages folder
+-   supports overridable systems (see nix-systems)
+-   default flake checks
+-   NixOS configurations
+-   NixOS modules
+-   Darwin modules
+-   Darwin configurations
+-   devshell
 
 ## Blacklisted inputs
 
 In order to avoid name clashes, avoid loading inputs with the following names:
-* lib
-* pname
-* system
-* pkgs
+
+-   lib
+-   pname
+-   system
+-   pkgs
 
 ## Packages folder
 
@@ -69,8 +72,8 @@ If the ./pkgs folder exists, load every sub-folder in it and map it to the `pack
 Each sub-folder should contain a `default.nix`, with the following function
 signature:
 
-* pname: name of the folder. Useful to inject back.
-* all the inputs
+-   pname: name of the folder. Useful to inject back.
+-   all the inputs
 
 ## How to support overrides?
 
@@ -80,12 +83,10 @@ Don't
 
 Don't
 
-
 ## Related projects
 
-* [flake-utils](https://github.com/numtide/flake-utils) the OG for flake libraries.
-* [flake-utils-plus]() extending flake-utils with more stuff.
-* [flake-parts](https://flake.parts) uses the Nix module system. It's too complicated for my taste.
-* [std]() ??
-* [snowflake-lib](TODO)
-
+-   [flake-utils](https://github.com/numtide/flake-utils) the OG for flake libraries.
+-   [flake-utils-plus]() extending flake-utils with more stuff.
+-   [flake-parts](https://flake.parts) uses the Nix module system. It's too complicated for my taste.
+-   [std]() ??
+-   [snowflake-lib](TODO)

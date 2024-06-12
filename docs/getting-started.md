@@ -12,7 +12,7 @@ This will give you a barebone project structure with a single `flake.nix` file c
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     blueprint.url = "github:numtide/blueprint";
   };
-  
+
   outputs = inputs: inputs.blueprint { inherit inputs; };
 }
 ```

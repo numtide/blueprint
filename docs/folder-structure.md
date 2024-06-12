@@ -2,12 +2,12 @@
 
 ## High-level
 
-* `devshell.nix` for your developer shell.
-* `hosts/` for machine configurations.
-* `lib/` for Nix functions.
-* `modules/` for NixOS and other modules.
-* `pkgs/` for packages. 
-* `templates/` for flake templates.
+-   `devshell.nix` for your developer shell.
+-   `hosts/` for machine configurations.
+-   `lib/` for Nix functions.
+-   `modules/` for NixOS and other modules.
+-   `pkgs/` for packages.
+-   `templates/` for flake templates.
 
 ## File arguments
 
@@ -19,12 +19,12 @@ Some of the files are instantiated multiple times, once per configured system. S
 
 Those take the following arguments:
 
-* `inputs`: maps to the flake inputs.
-* `system`: the current system attribute.
-* `perSystem`: contains the packages of all the inputs, filtered per system.
+-   `inputs`: maps to the flake inputs.
+-   `system`: the current system attribute.
+-   `perSystem`: contains the packages of all the inputs, filtered per system.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
-* `flake`: points to the current flake. It's a shorthand for `inputs.self`.
-* `pkgs`: and instance of nixpkgs, see [configuration](configuration.md) on how it's configured.
+-   `flake`: points to the current flake. It's a shorthand for `inputs.self`.
+-   `pkgs`: and instance of nixpkgs, see [configuration](configuration.md) on how it's configured.
 
 ## Mapping
 
@@ -35,8 +35,9 @@ Contains the developer shell if specified.
 Called with the [per-system](#per-system) attributes.
 
 Flake outputs:
-* `devShells.<system>.default`
-* `checks.<system>.devshell`
+
+-   `devShells.<system>.default`
+-   `checks.<system>.devshell`
 
 #### Example
 
@@ -50,7 +51,7 @@ pkgs.mkShell {
 }
 ```
 
-### `hosts/<hostname>/(configuration.nix|darwin-configuration.nix)` 
+### `hosts/<hostname>/(configuration.nix|darwin-configuration.nix)`
 
 Each folder contains either a NixOS or nix-darwin configuration:
 
@@ -59,12 +60,14 @@ Each folder contains either a NixOS or nix-darwin configuration:
 Evaluates to a NixOS configuration.
 
 Additional values passed:
-* `inputs` maps to the current flake inputs.
-* `flake` maps to `inputs.self`.
+
+-   `inputs` maps to the current flake inputs.
+-   `flake` maps to `inputs.self`.
 
 Flake outputs:
-* `nixosConfigurations.<hostname>`
-* `checks.<system>.nixos-<hostname>` - contains the system closure.
+
+-   `nixosConfigurations.<hostname>`
+-   `checks.<system>.nixos-<hostname>` - contains the system closure.
 
 ##### Example
 
@@ -87,6 +90,7 @@ Flake outputs:
 Evaluates to a [nix-darwin](https://github.com/LnL7/nix-darwin) configuration.
 
 To support it, also add the following lines to the `flake.nix` file:
+
 ```nix
 {
   inputs.nix-darwin.url = "github:LnL7/nix-darwin";
@@ -94,12 +98,14 @@ To support it, also add the following lines to the `flake.nix` file:
 ```
 
 Additional values passed:
-* `inputs` maps to the current flake inputs.
-* `flake` maps to `inputs.self`.
+
+-   `inputs` maps to the current flake inputs.
+-   `flake` maps to `inputs.self`.
 
 Flake outputs:
-* `darwinConfiguration.<hostname>`
-* `checks.<system>.darwin-<hostname>` - contains the system closure.
+
+-   `darwinConfiguration.<hostname>`
+-   `checks.<system>.darwin-<hostname>` - contains the system closure.
 
 ### `lib/`
 
@@ -109,8 +115,8 @@ TODO
 
 Where the type can be:
 
-* "nixos" -> `nixosModules.<name>`
-* "darwin" -> `darwinModules.<name>`
+-   "nixos" -> `nixosModules.<name>`
+-   "darwin" -> `darwinModules.<name>`
 
 These and other unrecognized types also make to `modules.<type>.<name>`.
 
@@ -119,9 +125,10 @@ These and other unrecognized types also make to `modules.<type>.<name>`.
 This folder contains all your packages.
 
 Flake outputs:
-* `packages.<system>.<pname>` - will contain the package
-* `checks.<system>.pkgs-<pname>` - also contains the package for `nix flake check`.
-* `checks.<system>.pkgs-<pname>-<tname>` - adds all the package `meta.tests`
+
+-   `packages.<system>.<pname>` - will contain the package
+-   `checks.<system>.pkgs-<pname>` - also contains the package for `nix flake check`.
+-   `checks.<system>.pkgs-<pname>-<tname>` - adds all the package `meta.tests`
 
 #### `default.nix`
 
@@ -141,4 +148,5 @@ This is what is used by blueprint in the [getting started](getting-started.md) s
 If no name is passed, it will look for the "default" folder.
 
 Flake outputs:
-* `templates.<name>`
+
+-   `templates.<name>`

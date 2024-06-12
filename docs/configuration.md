@@ -21,6 +21,7 @@ Default: it will load the `inputs.systems` flake input, first from the current f
 Type: list of `<kernel>-<arch>` strings.
 
 Example:
+
 ```nix
 {
   outputs = inputs: inputs.blueprint {
@@ -39,6 +40,7 @@ Default: `inputs.nixpkgs.legacyPackages.<system>`.
 Type: attrset.
 
 Example:
+
 ```nix
 {
   outputs = inputs: inputs.blueprint {
