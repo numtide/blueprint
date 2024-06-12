@@ -2,7 +2,17 @@
 
 > **STATUS: experimental**
 
-> Are you tired of copy-pasting Nix code and gluing everything together by hand?
+## What's blueprint?
+
+Blueprint is a light framework that replaces Nix glue code with a regular folder structure. Focus on deploying your infrastructure / package sets instead of reinventing the wheel.
+
+The ambition is to handle all the workflows to reduce the cost of self-hosting infrastructure (we're not quite there yet).
+
+## Getting started
+
+Jump to [getting started](docs/getting-started.md).
+
+## Rationale
 
 Nix is just a tool. It should help you, and stay out of the way. But because
 it's so flexible, everybody goes trough a 3 month period where they figure out
@@ -11,7 +21,7 @@ become fatter and fatter with more glue code.
 
 By making a few opinionated choices, we're able to cut 99% of the glue code
 you would find in most repos. A bit like Ruby on Rails did for web frameworks,
-we do it for Nix packages.
+we do it for Nix packages. We map folder and files to flake outputs.
 
 In some ways, this is the spiritual successor to `flake-utils`, my first
 attempt at making flakes easier to use.
@@ -27,8 +37,7 @@ What it's bad for:
 ## Design principles
 
 * KISS. We don't need complicated module systems with infinite recursions.
-* 1:1 mapping.
-* Keep the mapping between attributes predictable.
+* 1:1 mapping. Keep the mapping between attributes predictable.
 * Think about user workflows.
 
 ## Features
@@ -45,17 +54,6 @@ What it's bad for:
 * Darwin configurations
 * devshell
 
-## TODO
-
-* Home configurations
-* GitHub Actions integration
-* `bp` CLI to:
-    * login Nix to github
-    * add/remove inputs
-    * update inputs
-    * flatten inputs to automate the input follows
-
-
 ## Blacklisted inputs
 
 In order to avoid name clashes, avoid loading inputs with the following names:
@@ -63,24 +61,6 @@ In order to avoid name clashes, avoid loading inputs with the following names:
 * pname
 * system
 * pkgs
-
-## Getting started
-
-[$ ./example/flake.nix](./example/flake.nix)
-
-```nix
-{
-  description = "my flake";
-
-  # Add all your dependencies here
-  inputs = {
-    blueprint.url = "path:..";
-  };
-
-  # Keep the magic invocations to minimum.
-  outputs = inputs: inputs.blueprint { inherit inputs; };
-}
-```
 
 ## Packages folder
 
