@@ -105,12 +105,12 @@ Flake outputs:
 
 TODO
 
-### `modules/<type>/(<name>|<name>.nix)
+### `modules/<type>/(<name>|<name>.nix)`
 
 Where the type can be:
 
-* "nixos" -> `nixosModules.<name>`
-* "darwin" -> `darwinModules.<name>`
+* "nixos" → `nixosModules.<name>`
+* "darwin" → `darwinModules.<name>`
 
 These and other unrecognized types also make to `modules.<type>.<name>`.
 
