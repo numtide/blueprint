@@ -202,7 +202,11 @@ let
       {
         # Pick self.packages.${system}.formatter or fallback on nixfmt-rfc-style
         formatter = eachSystem (
-          { pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style
+          args@{ pkgs, perSystem, ... }:
+          if builtins.pathExists (src + "/formatter.nix") then
+            import (src + "/formatter.nix") args
+          else
+            perSystem.self.formatter or pkgs.nixfmt-rfc-style
         );
 
         lib = tryImport (src + "/lib") inputs;
