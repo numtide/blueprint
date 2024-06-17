@@ -114,7 +114,7 @@ Where the type can be:
 
 These and other unrecognized types also make to `modules.<type>.<name>`.
 
-### `pkgs/<pname>/(default.nix|package.nix)`
+### `packages/<pname>/(default.nix|package.nix)`
 
 This folder contains all your packages.
 
