@@ -265,18 +265,18 @@ let
         checks = eachSystem (
           { system, ... }:
           lib.mergeAttrsList [
-            # add all the supported packages, and their meta.tests to checks
+            # add all the supported packages, and their passthru.tests to checks
             (withPrefix "pkgs-" (
               lib.concatMapAttrs (
                 pname: package:
                 {
                   ${pname} = package;
                 }
-                # also add the meta.tests to the checks
+                # also add the passthru.tests to the checks
                 // (lib.mapAttrs' (tname: test: {
                   name = "${pname}-${tname}";
                   value = test;
-                }) (filterPlatforms system (package.meta.tests or { })))
+                }) (filterPlatforms system (package.passthru.tests or { })))
               ) (filterPlatforms system (inputs.self.packages.${system} or { }))
             ))
             # build all the devshells
