@@ -121,7 +121,7 @@ This folder contains all your packages.
 Flake outputs:
 * `packages.<system>.<pname>` - will contain the package
 * `checks.<system>.pkgs-<pname>` - also contains the package for `nix flake check`.
-* `checks.<system>.pkgs-<pname>-<tname>` - adds all the package `meta.tests`
+* `checks.<system>.pkgs-<pname>-<tname>` - adds all the package `passthru.tests`
 
 #### `default.nix`
 

@@ -4,7 +4,7 @@
   writeShellApplication,
 }:
 let
-  pb = writeShellApplication {
+  bp = writeShellApplication {
     name = "bp";
     runtimeInputs = [
 
@@ -28,11 +28,17 @@ let
 
     meta = {
       description = "ignore me, this is not ready";
-
-      tests.does-it-run = runCommand "bp-does-it-run" { } ''
-        ${pb}/bin/bp --help > $out
-      '';
     };
   };
 in
-pb
+bp
+// {
+  # https://github.com/NixOS/nixpkgs/pull/320973
+  passthru = bp.passthru // {
+    tests = {
+      does-it-run = runCommand "bp-does-it-run" { } ''
+        ${bp}/bin/bp --help > $out
+      '';
+    };
+  };
+}
