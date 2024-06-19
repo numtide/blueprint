@@ -221,20 +221,24 @@ let
             { }
         );
 
-        packages = importDir (src + "/pkgs") (
-          entries:
-          eachSystem (
-            { pkgs, ... }@args:
-            lib.mapAttrs (
-              pname:
-              { path, type }:
-              if type == "directory" && !builtins.pathExists (path + "/default.nix") then
-                pkgs.callPackage "${toString path}/package.nix" { }
-              else
-                import path (args // { inherit pname; })
-            ) entries
-          )
-        );
+        packages =
+          lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
+            importDir
+            (src + "/packages")
+            (
+              entries:
+              eachSystem (
+                { pkgs, ... }@args:
+                lib.mapAttrs (
+                  pname:
+                  { path, type }:
+                  if type == "directory" && !builtins.pathExists (path + "/default.nix") then
+                    pkgs.callPackage "${toString path}/package.nix" { }
+                  else
+                    import path (args // { inherit pname; })
+                ) entries
+              )
+            );
 
         darwinConfigurations = hostsByCategory.darwinConfigurations or { };
         nixosConfigurations = hostsByCategory.nixosConfigurations or { };
