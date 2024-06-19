@@ -1,38 +1,32 @@
-{ nixpkgs, ... }@bpInputs:
+{ inputs, ... }:
 # A bunch of helper utilities for the project
 let
+  bpInputs = inputs;
+  nixpkgs = bpInputs.nixpkgs;
   lib = nixpkgs.lib;
 
   # A generator for the top-level attributes of the flake.
   #
-  # Designed to work with nix-systems
+  # Designed to work with https://github.com/nix-systems
   mkEachSystem =
     {
       inputs,
+      flake,
       systems,
       nixpkgs,
     }:
     let
-      # make compatible with github:nix-systems/default
-      sys = if lib.isList systems then systems else import systems;
-      # memoize the args per system
-      args = lib.genAttrs sys (
+
+      # Memoize the args per system
+      args = lib.genAttrs systems (
         system:
         let
-          # resolve the packages for each input
+          # Resolve the packages for each input.
           perSystem = lib.mapAttrs (
-            _: flake: (flake.packages or flake.legacyPackages or { }).${system} or { }
+            _: flake: flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
           ) inputs;
-        in
-        {
-          # add system as a special, non-overridable value
-          inherit inputs perSystem system;
 
-          # add shortcut for self
-          self = throw "self was renamed to flake";
-          flake = inputs.self;
-
-          # handle nixpkgs specially.
+          # Handle nixpkgs specially.
           pkgs =
             if (nixpkgs.config or { }) == { } then
               perSystem.nixpkgs
@@ -41,15 +35,24 @@ let
                 inherit system;
                 config = nixpkgs.config;
               };
-        }
+        in
+        lib.makeScope lib.callPackageWith (_: {
+          inherit
+            inputs
+            perSystem
+            flake
+            pkgs
+            system
+            ;
+        })
       );
     in
-    f: lib.genAttrs sys (system: f args.${system});
+    f: lib.genAttrs systems (system: f args.${system});
 
-  ifDir = path: lib.optionalAttrs (builtins.pathExists path);
+  optionalPathAttrs = path: f: lib.optionalAttrs (builtins.pathExists path) (f path);
 
   # Imports the path and pass the `args` to it if it exists, otherwise, return an empty attrset.
-  tryImport = path: args: ifDir path (import path args);
+  tryImport = path: args: optionalPathAttrs path (path: import path args);
 
   # Maps all the nix files and folders in a directory to name -> path.
   importDir =
@@ -58,7 +61,7 @@ let
       entries = builtins.readDir path;
 
       # Get paths to directories
-      onlyDirs = lib.filterAttrs (name: type: type == "directory") entries;
+      onlyDirs = lib.filterAttrs (_name: type: type == "directory") entries;
       dirPaths = lib.mapAttrs (name: type: {
         path = path + "/${name}";
         inherit type;
@@ -84,7 +87,7 @@ let
     in
     lib.optionalAttrs (builtins.pathExists path) (fn combined);
 
-  entriesPath = lib.mapAttrs (name: { path, type }: path);
+  entriesPath = lib.mapAttrs (_name: { path, type }: path);
 
   # Prefixes all the keys of an attrset with the given prefix
   withPrefix =
@@ -106,10 +109,211 @@ let
       _: x: if x.meta ? platforms then lib.elem system x.meta.platforms else true # keep every package that has no meta.platforms
     ) attrs;
 
-  # Create a new flake blueprint
-  mkFlake =
+  mkBlueprint' =
     {
-      # Pass the flake inputs to the blueprint
+      inputs,
+      nixpkgs,
+      flake,
+      src,
+      systems,
+    }:
+    let
+      specialArgs = {
+        inherit inputs flake;
+        self = throw "self was renamed to flake";
+      };
+
+      eachSystem = mkEachSystem {
+        inherit
+          inputs
+          flake
+          nixpkgs
+          systems
+          ;
+      };
+
+      hosts = importDir (src + "/hosts") (
+        entries:
+        let
+          loadNixOS =
+            path:
+            # FIXME: we assume it's using the nixpkgs input. How do you switch to another one?
+            inputs.nixpkgs.lib.nixosSystem {
+              modules = [ path ];
+              inherit specialArgs;
+            };
+
+          loadNixDarwin =
+            path:
+            # FIXME: we assume it's using the nix-darwin input. How do you switch to another one?
+            (inputs.nix-darwin.lib.darwinSystem {
+              modules = [ path ];
+              inherit specialArgs;
+            })
+            // {
+              # FIXME: upstream https://github.com/NixOS/nixpkgs/pull/197547
+              class = "nix-darwin";
+            };
+
+          loadHost =
+            name:
+            { path, type }:
+            if builtins.pathExists (path + "/configuration.nix") then
+              loadNixOS (path + "/configuration.nix")
+            else if builtins.pathExists (path + "/darwin-configuration.nix") then
+              loadNixDarwin (path + "/darwin-configuration.nix")
+            else
+              throw "host '${name}' does not have a configuration";
+        in
+        lib.mapAttrs loadHost entries
+      );
+
+      hostsByCategory = lib.mapAttrs (_: hosts: lib.listToAttrs hosts) (
+        lib.groupBy (
+          x:
+          if isNixOS x.value then
+            "nixosConfigurations"
+          else if isNixDarwin x.value then
+            "darwinConfigurations"
+          else
+            throw "host '${x.name}' of class '${x.value.class or "unknown"}' not supported"
+        ) (lib.attrsToList hosts)
+      );
+
+      modules = {
+        common = importDir (src + "/modules/common") entriesPath;
+        darwin = importDir (src + "/modules/darwin") entriesPath;
+        home = importDir (src + "/modules/home") entriesPath;
+        nixos = importDir (src + "/modules/nixos") entriesPath;
+      };
+    in
+    # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
+    {
+      formatter = eachSystem (
+        { pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style
+      );
+
+      lib = tryImport (src + "/lib") specialArgs;
+
+      # expose the functor to the top-level
+      # FIXME: only if it exists
+      __functor = x: inputs.self.lib.__functor x;
+
+      devShells =
+        (optionalPathAttrs (src + "/devshells") (
+          path:
+          importDir path (
+            entries:
+            eachSystem (
+              { newScope, ... }:
+              lib.mapAttrs (pname: { path, type }: newScope { inherit pname; } path { }) entries
+            )
+          )
+        ))
+        // (optionalPathAttrs (src + "/devshell.nix") (
+          path:
+          eachSystem (
+            { newScope, ... }:
+            {
+              default = newScope { pname = "default"; } path { };
+            }
+          )
+        ));
+
+      packages =
+        lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
+          (
+            (optionalPathAttrs (src + "/packages") (
+              path:
+              importDir path (
+                entries:
+                eachSystem (
+                  { newScope, ... }:
+                  lib.mapAttrs (pname: { path, type }: newScope { inherit pname; } path { }) entries
+                )
+              )
+            ))
+            // (optionalPathAttrs (src + "/package.nix") (
+              path:
+              eachSystem (
+                { newScope, ... }:
+                {
+                  default = newScope { pname = "default"; } path { };
+                }
+              )
+            ))
+            // (optionalPathAttrs (src + "/formatter.nix") (
+              path:
+              eachSystem (
+                { newScope, ... }:
+                {
+                  formatter = newScope { pname = "formatter"; } path { };
+                }
+              )
+            ))
+          );
+
+      darwinConfigurations = hostsByCategory.darwinConfigurations or { };
+      nixosConfigurations = hostsByCategory.nixosConfigurations or { };
+
+      inherit modules;
+      darwinModules = modules.darwin;
+      homeModules = modules.home;
+      # TODO: how to extract NixOS tests?
+      nixosModules = modules.nixos;
+
+      templates = importDir (src + "/templates") (
+        entries:
+        lib.mapAttrs (
+          name:
+          { path, type }:
+          {
+            path = path;
+            # FIXME: how can we add something more meaningful?
+            description = name;
+          }
+        ) entries
+      );
+
+      checks = eachSystem (
+        { system, ... }:
+        lib.mergeAttrsList [
+          # add all the supported packages, and their passthru.tests to checks
+          (withPrefix "pkgs-" (
+            lib.concatMapAttrs (
+              pname: package:
+              {
+                ${pname} = package;
+              }
+              # also add the passthru.tests to the checks
+              // (lib.mapAttrs' (tname: test: {
+                name = "${pname}-${tname}";
+                value = test;
+              }) (filterPlatforms system (package.passthru.tests or { })))
+            ) (filterPlatforms system (inputs.self.packages.${system} or { }))
+          ))
+          # build all the devshells
+          (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
+          # add nixos system closures to checks
+          (withPrefix "nixos-" (
+            lib.mapAttrs (_: x: x.config.system.build.toplevel) (
+              lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
+            )
+          ))
+          # add darwin system closures to checks
+          (withPrefix "darwin-" (
+            lib.mapAttrs (_: x: x.system) (
+              lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
+            )
+          ))
+        ]
+      );
+    };
+
+  # Create a new flake blueprint
+  mkBlueprint =
+    {
+      # Pass the flake inputs to blueprint
       inputs,
       # Load the blueprint from this path
       prefix ? null,
@@ -120,188 +324,35 @@ let
       # The systems to generate the flake for
       systems ? inputs.systems or bpInputs.systems,
     }:
-    (
-      { inputs }:
-      let
-        eachSystem = mkEachSystem { inherit inputs nixpkgs systems; };
+    mkBlueprint' {
+      inputs = bpInputs // inputs;
+      flake = inputs.self;
 
-        src =
-          if prefix == null then
-            inputs.self
-          else if builtins.isPath prefix then
-            prefix
-          else if builtins.isString prefix then
-            "${inputs.self}/${prefix}"
-          else
-            throw "${builtins.typeOf prefix} is not supported for the prefix";
+      inherit nixpkgs;
 
-        hosts = importDir (src + "/hosts") (
-          entries:
-          let
-            # Something to pass to all the systems
-            specialArgs = {
-              inherit inputs;
-              # shortcut for self
-              self = throw "self was renamed to flake";
-              flake = inputs.self;
-            };
+      src =
+        if prefix == null then
+          inputs.self
+        else if builtins.isPath prefix then
+          prefix
+        else if builtins.isString prefix then
+          "${inputs.self}/${prefix}"
+        else
+          throw "${builtins.typeOf prefix} is not supported for the prefix";
 
-            loadNixOS =
-              path:
-              # FIXME: we assume it's using the nixpkgs input. How do you switch to another one?
-              inputs.nixpkgs.lib.nixosSystem {
-                modules = [ path ];
-                inherit specialArgs;
-              };
-
-            loadNixDarwin =
-              path:
-              # FIXME: we assume it's using the nix-darwin input. How do you switch to another one?
-              (inputs.nix-darwin.lib.darwinSystem {
-                modules = [ path ];
-                inherit specialArgs;
-              })
-              // {
-                # FIXME: upstream https://github.com/NixOS/nixpkgs/pull/197547
-                class = "nix-darwin";
-              };
-
-            loadHost =
-              name:
-              { path, type }:
-              if builtins.pathExists (path + "/configuration.nix") then
-                loadNixOS (path + "/configuration.nix")
-              else if builtins.pathExists (path + "/darwin-configuration.nix") then
-                loadNixDarwin (path + "/darwin-configuration.nix")
-              else
-                throw "host '${name}' does not have a configuration";
-          in
-          lib.mapAttrs loadHost entries
-        );
-
-        hostsByCategory = lib.mapAttrs (_: hosts: lib.listToAttrs hosts) (
-          lib.groupBy (
-            x:
-            if isNixOS x.value then
-              "nixosConfigurations"
-            else if isNixDarwin x.value then
-              "darwinConfigurations"
-            else
-              throw "host '${x.name}' of class '${x.value.class or "unknown"}' not supported"
-          ) (lib.attrsToList hosts)
-        );
-
-        modules = {
-          common = importDir (src + "/modules/common") entriesPath;
-          darwin = importDir (src + "/modules/darwin") entriesPath;
-          home = importDir (src + "/modules/home") entriesPath;
-          nixos = importDir (src + "/modules/nixos") entriesPath;
-        };
-      in
-      # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
-      {
-        # Pick self.packages.${system}.formatter or fallback on nixfmt-rfc-style
-        formatter = eachSystem (
-          { pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style
-        );
-
-        lib = tryImport (src + "/lib") inputs;
-
-        # expose the functor to the top-level
-        # FIXME: only if it exists
-        __functor = x: inputs.self.lib.__functor x;
-
-        devShells = eachSystem (
-          args:
-          if builtins.pathExists (src + "/devshell.nix") then
-            # FIXME: do we want to support multiple shells?
-            { default = import (src + "/devshell.nix") args; }
-          else
-            # TODO: what would a default shell look like?
-            { }
-        );
-
-        packages =
-          lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
-            importDir
-            (src + "/packages")
-            (
-              entries:
-              eachSystem (
-                { pkgs, ... }@args:
-                lib.mapAttrs (
-                  pname:
-                  { path, type }:
-                  if type == "directory" && !builtins.pathExists (path + "/default.nix") then
-                    pkgs.callPackage "${toString path}/package.nix" { }
-                  else
-                    import path (args // { inherit pname; })
-                ) entries
-              )
-            );
-
-        darwinConfigurations = hostsByCategory.darwinConfigurations or { };
-        nixosConfigurations = hostsByCategory.nixosConfigurations or { };
-
-        inherit modules;
-        darwinModules = modules.darwin;
-        homeModules = modules.home;
-        # TODO: how to extract NixOS tests?
-        nixosModules = modules.nixos;
-
-        templates = importDir (src + "/templates") (
-          entries:
-          lib.mapAttrs (
-            name:
-            { path, type }:
-            {
-              path = path;
-              # FIXME: how can we add something more meaningful?
-              description = name;
-            }
-          ) entries
-        );
-
-        checks = eachSystem (
-          { system, ... }:
-          lib.mergeAttrsList [
-            # add all the supported packages, and their passthru.tests to checks
-            (withPrefix "pkgs-" (
-              lib.concatMapAttrs (
-                pname: package:
-                {
-                  ${pname} = package;
-                }
-                # also add the passthru.tests to the checks
-                // (lib.mapAttrs' (tname: test: {
-                  name = "${pname}-${tname}";
-                  value = test;
-                }) (filterPlatforms system (package.passthru.tests or { })))
-              ) (filterPlatforms system (inputs.self.packages.${system} or { }))
-            ))
-            # build all the devshells
-            (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
-            # add nixos system closures to checks
-            (withPrefix "nixos-" (
-              lib.mapAttrs (_: x: x.config.system.build.toplevel) (
-                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
-              )
-            ))
-            # add darwin system closures to checks
-            (withPrefix "darwin-" (
-              lib.mapAttrs (_: x: x.system) (
-                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
-              )
-            ))
-          ]
-        );
-      }
-    )
-      { inputs = bpInputs // inputs; };
+      # Make compatible with github:nix-systems/default
+      systems = if lib.isList systems then systems else import systems;
+    };
 in
 {
-  inherit mkFlake;
+  inherit
+    filterPlatforms
+    importDir
+    mkBlueprint
+    tryImport
+    withPrefix
+    ;
 
   # Make this callable
-  __functor = _: mkFlake;
+  __functor = _: mkBlueprint;
 }
