@@ -101,9 +101,20 @@ Flake outputs:
 * `darwinConfiguration.<hostname>`
 * `checks.<system>.darwin-<hostname>` - contains the system closure.
 
-### `lib/`
+### `lib/default.nix`
 
-TODO
+Loaded if it exists.
+
+It takes the `inputs` as a positional argument.
+
+Eg:
+```nix
+inputs:
+{ }
+```
+
+Flake outputs:
+* `lib` - contains the return value of `lib/default.nix`
 
 ### `modules/<type>/(<name>|<name>.nix)`
 
