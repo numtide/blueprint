@@ -26,6 +26,19 @@ Those take the following arguments:
 * `flake`: points to the current flake. It's a shorthand for `inputs.self`.
 * `pkgs`: and instance of nixpkgs, see [configuration](configuration.md) on how it's configured.
 
+In addition to the standard arguments, you can specify additional arguments to be passed by specifying them as `extraArgs`:
+
+```nix
+outputs =
+  inputs:
+  inputs.blueprint {
+    inherit inputs;
+    extraArgs = {
+      lib = inputs.nixpkgs.lib.extend (import ./lib.nix);
+    };
+  };
+```
+
 ## Mapping
 
 ### `devshell.nix`

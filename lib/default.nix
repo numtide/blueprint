@@ -11,6 +11,7 @@ let
       inputs,
       systems,
       nixpkgs,
+      extraArgs,
     }:
     let
       # make compatible with github:nix-systems/default
@@ -41,7 +42,7 @@ let
                 inherit system;
                 config = nixpkgs.config;
               };
-        }
+        } // extraArgs
       );
     in
     f: lib.genAttrs sys (system: f args.${system});
@@ -119,11 +120,13 @@ let
       },
       # The systems to generate the flake for
       systems ? inputs.systems or bpInputs.systems,
+      # Extra args to be passed in perSystem calls
+      extraArgs ? {}
     }:
     (
       { inputs }:
       let
-        eachSystem = mkEachSystem { inherit inputs nixpkgs systems; };
+        eachSystem = mkEachSystem { inherit inputs nixpkgs systems extraArgs; };
 
         src =
           if prefix == null then
