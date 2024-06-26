@@ -56,16 +56,6 @@ What it's bad for:
 * Darwin configurations
 * devshell
 
-## Packages folder
-
-If the ./pkgs folder exists, load every sub-folder in it and map it to the `packages` output.
-
-Each sub-folder should contain a `default.nix`, with the following function
-signature:
-
-* pname: name of the folder. Useful to inject back.
-* all the inputs
-
 ## How to support overrides?
 
 Don't
