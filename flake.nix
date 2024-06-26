@@ -9,8 +9,8 @@
   outputs =
     inputs:
     let
-      # use self to create self
-      blueprint = import ./lib inputs;
+      # Use self to create self
+      blueprint = import ./lib { inherit inputs; };
     in
     blueprint { inherit inputs; };
 }

@@ -4,7 +4,7 @@
 
 ## What's blueprint?
 
-Blueprint is a light framework that replaces Nix glue code with a regular folder structure. Focus on deploying your infrastructure / package sets instead of reinventing the wheel.
+Blueprint replaces Nix glue code with a regular folder structure. Focus on deploying your infrastructure / package sets instead of reinventing the wheel.
 
 The ambition is to handle all the workflows to reduce the cost of self-hosting infrastructure (we're not quite there yet).
 
@@ -27,18 +27,20 @@ In some ways, this is the spiritual successor to `flake-utils`, my first
 attempt at making flakes easier to use.
 
 What it's good for:
+
 * Home and SME configurations
 * Package sets
 
 What it's bad for:
+
 * Complicated setups (although we try to provide gracefull fallback)
 * Developer environments (see devenv.sh)
 
 ## Design principles
 
+* User workflows come first.
 * KISS. We don't need complicated module systems with infinite recursions.
 * 1:1 mapping. Keep the mapping between attributes predictable.
-* Think about user workflows.
 
 ## Features
 
@@ -54,24 +56,6 @@ What it's bad for:
 * Darwin configurations
 * devshell
 
-## Blacklisted inputs
-
-In order to avoid name clashes, avoid loading inputs with the following names:
-* lib
-* pname
-* system
-* pkgs
-
-## Packages folder
-
-If the ./pkgs folder exists, load every sub-folder in it and map it to the `packages` output.
-
-Each sub-folder should contain a `default.nix`, with the following function
-signature:
-
-* pname: name of the folder. Useful to inject back.
-* all the inputs
-
 ## How to support overrides?
 
 Don't
@@ -80,12 +64,9 @@ Don't
 
 Don't
 
-
 ## Related projects
 
 * [flake-utils](https://github.com/numtide/flake-utils) the OG for flake libraries.
-* [flake-utils-plus]() extending flake-utils with more stuff.
 * [flake-parts](https://flake.parts) uses the Nix module system. It's too complicated for my taste.
-* [std]() ??
-* [snowflake-lib](TODO)
-
+* [std](https://github.com/divnix/std)
+* [snowflake-lib](https://github.com/snowfallorg/lib)

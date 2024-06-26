@@ -8,6 +8,6 @@
     blueprint.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  # Keep the magic invocations to minimum.
+  # Load the blueprint
   outputs = inputs: inputs.blueprint { inherit inputs; };
 }
