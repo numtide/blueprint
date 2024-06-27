@@ -45,7 +45,7 @@ Flake outputs:
 * `devShells.<system>.<pname>`
 * `checks.<system>.devshell-<pname>`
 
-#### Example
+#### Devshell example
 
 ```nix
 { pkgs, perSystem, ... }:
@@ -75,7 +75,7 @@ Flake outputs:
 * `nixosConfigurations.<hostname>`
 * `checks.<system>.nixos-<hostname>` - contains the system closure.
 
-##### Example
+##### NixOS example
 
 ```nix
 { flake, inputs, ... }:

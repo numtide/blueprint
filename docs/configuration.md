@@ -16,11 +16,12 @@ Type: string.
 
 Defines for which systems the project should be used and deployed on.
 
-Default: it will load the `inputs.systems` flake input, first from the current flake, and then fallback to the blueprint one. (see https://github.com/nix-systems/default).
+Default: it will load the `inputs.systems` flake input, first from the current flake, and then fallback to the blueprint one. (see <https://github.com/nix-systems/default>).
 
 Type: list of `<kernel>-<arch>` strings.
 
 Example:
+
 ```nix
 {
   outputs = inputs: inputs.blueprint {
@@ -39,6 +40,7 @@ Default: `inputs.nixpkgs.legacyPackages.<system>`.
 Type: attrset.
 
 Example:
+
 ```nix
 {
   outputs = inputs: inputs.blueprint {
