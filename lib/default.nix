@@ -223,34 +223,23 @@ let
       packages =
         lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
           (
-            (optionalPathAttrs (src + "/packages") (
-              path:
-              importDir path (
-                entries:
-                eachSystem (
-                  { newScope, ... }:
-                  lib.mapAttrs (pname: { path, type }: newScope { inherit pname; } path { }) entries
-                )
-              )
-            ))
-            // (optionalPathAttrs (src + "/package.nix") (
-              path:
-              eachSystem (
-                { newScope, ... }:
-                {
-                  default = newScope { pname = "default"; } path { };
-                }
-              )
-            ))
-            // (optionalPathAttrs (src + "/formatter.nix") (
-              path:
-              eachSystem (
-                { newScope, ... }:
-                {
-                  formatter = newScope { pname = "formatter"; } path { };
-                }
-              )
-            ))
+            let
+              entries =
+                (optionalPathAttrs (src + "/packages") (path: importDir path lib.id))
+                // (optionalPathAttrs (src + "/package.nix") (path: {
+                  default = {
+                    inherit path;
+                  };
+                }))
+                // (optionalPathAttrs (src + "/formatter.nix") (path: {
+                  formatter = {
+                    inherit path;
+                  };
+                }));
+            in
+            eachSystem (
+              { newScope, ... }: lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries
+            )
           );
 
       darwinConfigurations = hostsByCategory.darwinConfigurations or { };

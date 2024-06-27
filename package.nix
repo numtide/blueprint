@@ -33,7 +33,7 @@ bp
   passthru = bp.passthru // {
     tests = {
       does-it-run = pkgs.runCommand "bp-does-it-run" { } ''
-        ${bp}/bin/bp --help > $out
+        ${bp}/bin/${pname} --help > $out
       '';
     };
   };
