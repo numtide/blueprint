@@ -158,7 +158,9 @@ let
           loadHost =
             name:
             { path, type }:
-            if builtins.pathExists (path + "/configuration.nix") then
+            if builtins.pathExists (path + "/default.nix") then
+              (import (path + "/default.nix")) { inherit flake inputs; }
+            else if builtins.pathExists (path + "/configuration.nix") then
               loadNixOS (path + "/configuration.nix")
             else if builtins.pathExists (path + "/darwin-configuration.nix") then
               loadNixDarwin (path + "/darwin-configuration.nix")
