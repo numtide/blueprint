@@ -57,7 +57,7 @@ pkgs.mkShell {
 }
 ```
 
-### `hosts/<hostname>/(configuration.nix|darwin-configuration.nix|default.nix)`
+### `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix)`
 
 Each folder contains either a NixOS or nix-darwin configuration:
 
