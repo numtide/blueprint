@@ -57,7 +57,7 @@ pkgs.mkShell {
 }
 ```
 
-### `hosts/<hostname>/(configuration.nix|darwin-configuration.nix)`
+### `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix)`
 
 Each folder contains either a NixOS or nix-darwin configuration:
 
@@ -112,6 +112,28 @@ Flake outputs:
 
 * `darwinConfiguration.<hostname>`
 * `checks.<system>.darwin-<hostname>` - contains the system closure.
+
+#### `default.nix`
+
+If present, this file takes precedence over `configuration.nix` and `darwin-configuration.nix` and is designed as an
+escape hatch, allowing the user complete control over `nixosSystem` or `darwinSystem` calls.
+
+```nix
+{ flake, inputs, ... }:
+    inputs.nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        ...
+    }
+```
+
+Additional values passed:
+
+* `inputs` maps to the current flake inputs.
+* `flake` maps to `inputs.self`.
+
+Flake outputs:
+
+> Depending on the system type returned, the flake outputs will be the same as detailed for NixOS or Darwin above.
 
 ### `lib/default.nix`
 
