@@ -120,16 +120,25 @@ escape hatch, allowing the user complete control over `nixosSystem` or `darwinSy
 
 ```nix
 { flake, inputs, ... }:
-    inputs.nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+{
+  class = "nixos";
+
+  value = inputs.nixpkgs-unstable.lib.nixosSystem {
+    system = "x86_64-linux";
         ...
-    }
+  };
+}
 ```
 
 Additional values passed:
 
 * `inputs` maps to the current flake inputs.
 * `flake` maps to `inputs.self`.
+
+Expected return value:
+
+* `class` - type of system. Currently "nixos" or "nix-darwin".
+* `value` - the evaluated system.
 
 Flake outputs:
 

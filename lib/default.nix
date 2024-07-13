@@ -99,10 +99,6 @@ let
       }
     );
 
-  isNixOS = attrs: attrs.class or "" == "nixos";
-
-  isNixDarwin = attrs: attrs.class or "" == "nix-darwin";
-
   filterPlatforms =
     system: attrs:
     lib.filterAttrs (
@@ -135,31 +131,31 @@ let
       hosts = importDir (src + "/hosts") (
         entries:
         let
-          loadNixOS =
-            path:
-            # FIXME: we assume it's using the nixpkgs input. How do you switch to another one?
-            inputs.nixpkgs.lib.nixosSystem {
-              modules = [ path ];
-              inherit specialArgs;
-            };
+          loadDefaultFn = { class, value }@inputs: inputs;
 
-          loadNixDarwin =
-            path:
-            # FIXME: we assume it's using the nix-darwin input. How do you switch to another one?
-            (inputs.nix-darwin.lib.darwinSystem {
+          loadDefault = path: loadDefaultFn (import (path + "/default.nix") { inherit flake inputs; });
+
+          loadNixOS = path: {
+            class = "nixos";
+            value = inputs.nixpkgs.lib.nixosSystem {
               modules = [ path ];
               inherit specialArgs;
-            })
-            // {
-              # FIXME: upstream https://github.com/NixOS/nixpkgs/pull/197547
-              class = "nix-darwin";
             };
+          };
+
+          loadNixDarwin = path: {
+            class = "nix-darwin";
+            value = inputs.nix-darwin.lib.darwinSystem {
+              modules = [ path ];
+              inherit specialArgs;
+            };
+          };
 
           loadHost =
             name:
             { path, type }:
             if builtins.pathExists (path + "/default.nix") then
-              (import (path + "/default.nix")) { inherit flake inputs; }
+              loadDefault (path + "/default.nix")
             else if builtins.pathExists (path + "/configuration.nix") then
               loadNixOS (path + "/configuration.nix")
             else if builtins.pathExists (path + "/darwin-configuration.nix") then
@@ -173,9 +169,9 @@ let
       hostsByCategory = lib.mapAttrs (_: hosts: lib.listToAttrs hosts) (
         lib.groupBy (
           x:
-          if isNixOS x.value then
+          if x.value.class == "nixos" then
             "nixosConfigurations"
-          else if isNixDarwin x.value then
+          else if x.value.class == "nix-darwin" then
             "darwinConfigurations"
           else
             throw "host '${x.name}' of class '${x.value.class or "unknown"}' not supported"
@@ -244,8 +240,8 @@ let
             )
           );
 
-      darwinConfigurations = hostsByCategory.darwinConfigurations or { };
-      nixosConfigurations = hostsByCategory.nixosConfigurations or { };
+      darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
+      nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
 
       inherit modules;
       darwinModules = modules.darwin;
