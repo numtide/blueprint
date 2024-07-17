@@ -33,8 +33,8 @@ What it's good for:
 
 What it's bad for:
 
-* Complicated setups (although we try to provide gracefull fallback)
-* Developer environments (see devenv.sh)
+* Complicated setups (although we try to provide graceful fallback)
+* Developer environments (see <https://devenv.sh>)
 
 ## Design principles
 
@@ -44,17 +44,17 @@ What it's bad for:
 
 ## Features
 
-* default formatter
-* lib folder
-* templates folder
-* packages folder
-* supports overridable systems (see nix-systems)
-* default flake checks
-* NixOS configurations
-* NixOS modules
-* Darwin modules
-* Darwin configurations
-* devshell
+* ./hosts for NixOS and Darwin configurations
+* ./packages for your packages.
+* ./lib for your libraries.
+* ./templates for your flake templates.
+* ./modules for common, nixos and darwin modules.
+* ./devshell.nix for your developer env.
+* default RFC166 nix formatter with `nix fmt`
+* supports overridable systems with [nix-systems](https://github.com/nix-systems).
+* automatic flake checks from packages, devshells and NixOS configurations.
+
+and more!
 
 ## How to support overrides?
 
