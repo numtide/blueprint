@@ -133,7 +133,7 @@ let
         let
           loadDefaultFn = { class, value }@inputs: inputs;
 
-          loadDefault = path: loadDefaultFn (import (path + "/default.nix") { inherit flake inputs; });
+          loadDefault = path: loadDefaultFn (import path { inherit flake inputs; });
 
           loadNixOS = path: {
             class = "nixos";
