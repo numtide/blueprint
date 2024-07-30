@@ -263,37 +263,56 @@ let
       );
 
       checks = eachSystem (
-        { system, ... }:
-        lib.mergeAttrsList [
-          # add all the supported packages, and their passthru.tests to checks
-          (withPrefix "pkgs-" (
-            lib.concatMapAttrs (
-              pname: package:
-              {
-                ${pname} = package;
+        { system, pkgs, ... }:
+        lib.mergeAttrsList (
+          [
+            # add all the supported packages, and their passthru.tests to checks
+            (withPrefix "pkgs-" (
+              lib.concatMapAttrs (
+                pname: package:
+                {
+                  ${pname} = package;
+                }
+                # also add the passthru.tests to the checks
+                // (lib.mapAttrs' (tname: test: {
+                  name = "${pname}-${tname}";
+                  value = test;
+                }) (filterPlatforms system (package.passthru.tests or { })))
+              ) (filterPlatforms system (inputs.self.packages.${system} or { }))
+            ))
+            # build all the devshells
+            (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
+            # add nixos system closures to checks
+            (withPrefix "nixos-" (
+              lib.mapAttrs (_: x: x.config.system.build.toplevel) (
+                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
+              )
+            ))
+            # add darwin system closures to checks
+            (withPrefix "darwin-" (
+              lib.mapAttrs (_: x: x.system) (
+                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
+              )
+            ))
+          ]
+          ++ (lib.optional (inputs.self.lib.tests or { } != { }) {
+            lib-tests = pkgs.runCommandLocal "lib-tests" { nativeBuildInputs = [ pkgs.nix-unit ]; } ''
+              export HOME="$(realpath .)"
+              export NIX_CONFIG='
+              extra-experimental-features = nix-command flakes
+              flake-registry = ""
+              '
+
+              nix-unit --flake ${flake}#lib.tests ${
+                toString (
+                  lib.mapAttrsToList (k: v: "--override-input ${k} ${v}") (builtins.removeAttrs inputs [ "self" ])
+                )
               }
-              # also add the passthru.tests to the checks
-              // (lib.mapAttrs' (tname: test: {
-                name = "${pname}-${tname}";
-                value = test;
-              }) (filterPlatforms system (package.passthru.tests or { })))
-            ) (filterPlatforms system (inputs.self.packages.${system} or { }))
-          ))
-          # build all the devshells
-          (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
-          # add nixos system closures to checks
-          (withPrefix "nixos-" (
-            lib.mapAttrs (_: x: x.config.system.build.toplevel) (
-              lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
-            )
-          ))
-          # add darwin system closures to checks
-          (withPrefix "darwin-" (
-            lib.mapAttrs (_: x: x.system) (
-              lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
-            )
-          ))
-        ]
+
+              touch $out
+            '';
+          })
+        )
       );
     };
 
@@ -330,12 +349,20 @@ let
       # Make compatible with github:nix-systems/default
       systems = if lib.isList systems then systems else import systems;
     };
+
+  tests = {
+    testPass = {
+      expr = 1;
+      expected = 1;
+    };
+  };
 in
 {
   inherit
     filterPlatforms
     importDir
     mkBlueprint
+    tests
     tryImport
     withPrefix
     ;
