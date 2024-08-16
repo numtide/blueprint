@@ -18,7 +18,7 @@ let
     let
 
       # Memoize the args per system
-      args = lib.genAttrs systems (
+      systemArgs = lib.genAttrs systems (
         system:
         let
           # Resolve the packages for each input.
@@ -46,8 +46,12 @@ let
             ;
         })
       );
+
+      eachSystem = f: lib.genAttrs systems (system: f systemArgs.${system});
     in
-    f: lib.genAttrs systems (system: f args.${system});
+    {
+      inherit systemArgs eachSystem;
+    };
 
   optionalPathAttrs = path: f: lib.optionalAttrs (builtins.pathExists path) (f path);
 
@@ -119,14 +123,25 @@ let
         self = throw "self was renamed to flake";
       };
 
-      eachSystem = mkEachSystem {
-        inherit
-          inputs
-          flake
-          nixpkgs
-          systems
-          ;
-      };
+      inherit
+        (mkEachSystem {
+          inherit
+            inputs
+            flake
+            nixpkgs
+            systems
+            ;
+        })
+        eachSystem
+        systemArgs
+        ;
+
+      # Adds the perSystem argument to the NixOS and Darwin modules
+      perSystemModule =
+        { pkgs, ... }:
+        {
+          _module.args.perSystem = systemArgs.${pkgs.system}.perSystem;
+        };
 
       hosts = importDir (src + "/hosts") (
         entries:
@@ -138,7 +153,10 @@ let
           loadNixOS = path: {
             class = "nixos";
             value = inputs.nixpkgs.lib.nixosSystem {
-              modules = [ path ];
+              modules = [
+                perSystemModule
+                path
+              ];
               inherit specialArgs;
             };
           };
@@ -146,7 +164,10 @@ let
           loadNixDarwin = path: {
             class = "nix-darwin";
             value = inputs.nix-darwin.lib.darwinSystem {
-              modules = [ path ];
+              modules = [
+                perSystemModule
+                path
+              ];
               inherit specialArgs;
             };
           };
