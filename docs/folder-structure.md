@@ -69,6 +69,8 @@ Additional values passed:
 
 * `inputs` maps to the current flake inputs.
 * `flake` maps to `inputs.self`.
+* `perSystem`: contains the packages of all the inputs, filtered per system.
+    Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
 
 Flake outputs:
 
@@ -78,11 +80,15 @@ Flake outputs:
 ##### NixOS example
 
 ```nix
-{ flake, inputs, ... }:
+{ flake, inputs, perSystem, ... }:
 {
   imports = [
     inputs.srvos.nixosModules.hardware-hetzner-cloud
     flake.modules.nixos.server
+  ];
+
+  environment.systemPackages = [
+    perSystem.nixos-anywhere.default
   ];
 
   nixpkgs.hostPlatform = "x86_64-linux";
@@ -107,6 +113,8 @@ Additional values passed:
 
 * `inputs` maps to the current flake inputs.
 * `flake` maps to `inputs.self`.
+* `perSystem`: contains the packages of all the inputs, filtered per system.
+    Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
 
 Flake outputs:
 
