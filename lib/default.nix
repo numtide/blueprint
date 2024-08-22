@@ -199,7 +199,7 @@ let
         ) (lib.attrsToList hosts)
       );
 
-      moduleDirs = builtins.attrNames (builtins.readDir src + "/modules");
+      moduleDirs = builtins.attrNames (builtins.readDir (src + "/modules"));
       modules = builtins.listToAttrs (map (name: {name = name; value = importDir (src + "/modules/${name}") entriesPath; }) moduleDirs);
 
       #modules = {
