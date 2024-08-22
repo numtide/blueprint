@@ -200,7 +200,7 @@ let
       );
 
       moduleDirs = builtins.attrNames (builtins.readDir src + "/modules");
-      modules = builtins.listToAttrs (map (name: {name = name; value = importDir (src + "/modules/${name}") entriesPath; }) modulesDirs);
+      modules = builtins.listToAttrs (map (name: {name = name; value = importDir (src + "/modules/${name}") entriesPath; }) moduleDirs);
 
       #modules = {
       #  common = importDir (src + "/modules/common") entriesPath;
