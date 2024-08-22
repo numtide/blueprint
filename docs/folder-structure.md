@@ -174,10 +174,13 @@ Eg:
 
 ### `modules/<type>/(<name>|<name>.nix)`
 
-Where the type can be:
+Where the type can be any folder name.
 
-* "nixos" → `nixosModules.<name>`
+For the following folder names, we also map them to the following outputs:
+
 * "darwin" → `darwinModules.<name>`
+* "home" → `homeModules.<name>`
+* "nixos" → `nixosModules.<name>`
 
 These and other unrecognized types also make to `modules.<type>.<name>`.
 

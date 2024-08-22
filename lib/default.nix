@@ -199,12 +199,16 @@ let
         ) (lib.attrsToList hosts)
       );
 
-      modules = {
-        common = importDir (src + "/modules/common") entriesPath;
-        darwin = importDir (src + "/modules/darwin") entriesPath;
-        home = importDir (src + "/modules/home") entriesPath;
-        nixos = importDir (src + "/modules/nixos") entriesPath;
-      };
+      modules =
+        let
+          path = src + "/modules";
+          moduleDirs = builtins.attrNames (
+            builtins.filterAttrs (_name: value: value == "directory") (builtins.readDir path)
+          );
+        in
+        lib.optionalAttrs (builtins.pathExists path) (
+          lib.genAttrs moduleDirs (name: importDir (path + "/${name}") entriesPath)
+        );
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
     {
@@ -286,10 +290,11 @@ let
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
 
       inherit modules;
-      darwinModules = modules.darwin;
-      homeModules = modules.home;
+
+      darwinModules = modules.darwin or { };
+      homeModules = modules.home or { };
       # TODO: how to extract NixOS tests?
-      nixosModules = modules.nixos;
+      nixosModules = modules.nixos or { };
 
       templates = importDir (src + "/templates") (
         entries:
