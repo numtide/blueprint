@@ -200,14 +200,12 @@ let
       );
 
       moduleDirs = builtins.attrNames (builtins.readDir (src + "/modules"));
-      modules = builtins.listToAttrs (map (name: {name = name; value = importDir (src + "/modules/${name}") entriesPath; }) moduleDirs);
-
-      #modules = {
-      #  common = importDir (src + "/modules/common") entriesPath;
-      #  darwin = importDir (src + "/modules/darwin") entriesPath;
-      #  home = importDir (src + "/modules/home") entriesPath;
-      #  nixos = importDir (src + "/modules/nixos") entriesPath;
-      #};
+      modules = builtins.listToAttrs (
+        map (name: {
+          name = name;
+          value = importDir (src + "/modules/${name}") entriesPath;
+        }) moduleDirs
+      );
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
     {
