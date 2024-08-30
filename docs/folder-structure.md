@@ -170,7 +170,7 @@ Additonal values passed:
 
 Flake outputs:
 
-* `homeConfigurations.<name>`
+* `homeConfigurations."<name>@<system>"`
 
 ##### home-manager example
 
