@@ -176,6 +176,19 @@ let
         lib.mapAttrs loadHome entries
       );
 
+      flattenUsernameSystem = attrs: builtins.foldl' (acc: name:
+        let
+          systems = attrs.${name};
+        in
+          builtins.foldl' (acc2: system:
+            acc2 // {
+              "${name}@${system}" = systems.${system};
+            }
+          ) acc (builtins.attrNames systems)
+      ) {} (builtins.attrNames attrs);
+
+      homesBySystem = flattenUsernameSystem homes;
+
       hosts = importDir (src + "/hosts") (
         entries:
         let
@@ -296,9 +309,7 @@ let
 
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
-      homeConfigurations = lib.mapAttrs (
-        _: subAttrs: lib.mapAttrs (_system: attrs: attrs.value) subAttrs
-      ) homes;
+      homeConfigurations = lib.mapAttrs(_: x: x.value) homesBySystem;
 
       inherit modules;
       darwinModules = modules.darwin;
