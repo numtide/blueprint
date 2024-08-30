@@ -165,7 +165,7 @@ Additonal values passed:
 
 * `inputs` maps to the current flake inputs.
 * `flake` maps to `inputs.self`.
-* `perSystem`: contains the packages of all the inputs, filtered per sysstem.
+* `pkgs` an instance of nixpkgs, see [configuration](configuration.md) on how it's configured.* `perSystem`: contains the packages of all the inputs, filtered per sysstem.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
 
 Flake outputs:
@@ -175,7 +175,7 @@ Flake outputs:
 ##### home-manager example
 
 ```nix
-{ flake, inputs, perSystem }:
+{ flake, inputs, pkgs, perSystem }:
 {
   imports = [
     flake.modules.home.zsh
