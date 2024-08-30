@@ -156,6 +156,7 @@ let
                 perSystemModule
                 path
               ];
+              extraSpecialArgs = specialArgs;
               inherit pkgs;
             };
           };          
@@ -187,6 +188,7 @@ let
                 perSystemModule
                 path
               ];
+              inherit specialArgs;
             };
           };
 
