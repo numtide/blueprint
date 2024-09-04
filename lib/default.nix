@@ -209,7 +209,28 @@ let
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
     {
       formatter = eachSystem (
-        { pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style
+        { pkgs, perSystem, ... }:
+        perSystem.self.formatter or (pkgs.writeShellApplication {
+          name = "nixfmt-rfc-style";
+
+          runtimeInputs = [
+            pkgs.findutils
+            pkgs.gnugrep
+            pkgs.nixfmt-rfc-style
+          ];
+
+          text = ''
+            set -euo pipefail
+
+            # Not a git repo, or git is not installed. Fallback
+            if ! git rev-parse --is-inside-work-tree; then
+              exec nixfmt "$@"
+            fi
+
+            # By default `nix fmt` passes "." as the first argument.
+            git ls-files "$@" | grep '\.nix$' | xargs --no-run-if-empty nixfmt
+          '';
+        })
       );
 
       lib = tryImport (src + "/lib") specialArgs;
