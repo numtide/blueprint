@@ -203,7 +203,7 @@ let
         let
           path = src + "/modules";
           moduleDirs = builtins.attrNames (
-            builtins.filterAttrs (_name: value: value == "directory") (builtins.readDir path)
+            lib.filterAttrs (_name: value: value == "directory") (builtins.readDir path)
           );
         in
         lib.optionalAttrs (builtins.pathExists path) (
