@@ -106,7 +106,11 @@ let
   filterPlatforms =
     system: attrs:
     lib.filterAttrs (
-      _: x: if x.meta ? platforms then lib.elem system x.meta.platforms else true # keep every package that has no meta.platforms
+      _: x:
+      if (x.meta.platforms or [ ]) == [ ] then
+        true # keep every package that has no meta.platforms
+      else
+        lib.elem system x.meta.platforms
     ) attrs;
 
   mkBlueprint' =
