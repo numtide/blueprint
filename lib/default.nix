@@ -143,14 +143,14 @@ let
           _module.args.perSystem = systemArgs.${pkgs.system}.perSystem;
         };
 
-      homes = importDir (src + "/homes") (
+      users = importDir (src + "/users") (
         entries:
         let
           loadDefaultFn = { value }@inputs: inputs;
 
           loadDefault = { pkgs }: path: loadDefaultFn (import path { inherit flake inputs pkgs; });
 
-          loadHomeConfig =
+          loadUserConfig =
             { pkgs }:
             path: {
               value = inputs.home-manager.lib.homeManagerConfiguration {
@@ -163,7 +163,7 @@ let
               };
             };
 
-          loadHome =
+          loadUser =
             name:
             { path, type }:
             if builtins.pathExists (path + "/default.nix") then
@@ -171,7 +171,7 @@ let
             else if builtins.pathExists (path + "/home.nix") then
               eachSystem ({ pkgs, ... }: loadHomeConfig { inherit pkgs; } (path + "/home.nix"))
             else
-              throw "home profile '${name}' does not have a configuration";
+              throw "user profile '${name}' does not have a configuration";
         in
         lib.mapAttrs loadHome entries
       );
@@ -188,7 +188,7 @@ let
           )
         ) { } (builtins.attrNames attrs);
 
-      homesBySystem = flattenUsernameSystem homes;
+      usersBySystem = flattenUsernameSystem users;
 
       hosts = importDir (src + "/hosts") (
         entries:
@@ -310,7 +310,7 @@ let
 
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
-      homeConfigurations = lib.mapAttrs (_: x: x.value) homesBySystem;
+      userConfigurations = lib.mapAttrs (_: x: x.value) usersBySystem;
 
       inherit modules;
       darwinModules = modules.darwin;
