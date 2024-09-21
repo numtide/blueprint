@@ -4,7 +4,7 @@
 
 * `devshells/` for devshells.
 * `hosts/` for machine configurations.
-* `homes/` for standalone home-manager configurations 
+* `users/` for standalone home-manager configurations 
 * `lib/` for Nix functions.
 * `modules/` for NixOS and other modules.
 * `packages/` for packages.
@@ -153,7 +153,7 @@ Flake outputs:
 
 > Depending on the system type returned, the flake outputs will be the same as detailed for NixOS or Darwin above.
 
-### `homes/<name>/(default.nix|home.nix)`
+### `users/<name>/(default.nix|home.nix)`
 
 Each folder contains a standalone home-manager configuration:
 
@@ -170,7 +170,7 @@ Additonal values passed:
 
 Flake outputs:
 
-* `homeConfigurations."<name>@<system>"`
+* `userConfigurations."<name>@<system>"`
 
 ##### home-manager example
 
