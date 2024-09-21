@@ -169,11 +169,11 @@ let
             if builtins.pathExists (path + "/default.nix") then
               eachSystem ({ pkgs, ... }: loadDefault { inherit pkgs; } (path + "/default.nix"))
             else if builtins.pathExists (path + "/home.nix") then
-              eachSystem ({ pkgs, ... }: loadHomeConfig { inherit pkgs; } (path + "/home.nix"))
+              eachSystem ({ pkgs, ... }: loadUserConfig { inherit pkgs; } (path + "/home.nix"))
             else
               throw "user profile '${name}' does not have a configuration";
         in
-        lib.mapAttrs loadHome entries
+        lib.mapAttrs loadUser entries
       );
 
       flattenUsernameSystem =
@@ -246,17 +246,42 @@ let
         ) (lib.attrsToList hosts)
       );
 
-      modules = {
-        common = importDir (src + "/modules/common") entriesPath;
-        darwin = importDir (src + "/modules/darwin") entriesPath;
-        home = importDir (src + "/modules/home") entriesPath;
-        nixos = importDir (src + "/modules/nixos") entriesPath;
-      };
+      modules =
+        let
+          path = src + "/modules";
+          moduleDirs = builtins.attrNames (
+            lib.filterAttrs (_name: value: value == "directory") (builtins.readDir path)
+          );
+        in
+        lib.optionalAttrs (builtins.pathExists path) (
+          lib.genAttrs moduleDirs (name: importDir (path + "/${name}") entriesPath)
+        );
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
     {
       formatter = eachSystem (
-        { pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-rfc-style
+        { pkgs, perSystem, ... }:
+        perSystem.self.formatter or (pkgs.writeShellApplication {
+          name = "nixfmt-rfc-style";
+
+          runtimeInputs = [
+            pkgs.findutils
+            pkgs.gnugrep
+            pkgs.nixfmt-rfc-style
+          ];
+
+          text = ''
+            set -euo pipefail
+
+            # Not a git repo, or git is not installed. Fallback
+            if ! git rev-parse --is-inside-work-tree; then
+              exec nixfmt "$@"
+            fi
+
+            # By default `nix fmt` passes "." as the first argument.
+            git ls-files "$@" | grep '\.nix$' | xargs --no-run-if-empty nixfmt
+          '';
+        })
       );
 
       lib = tryImport (src + "/lib") specialArgs;
@@ -313,10 +338,10 @@ let
       userConfigurations = lib.mapAttrs (_: x: x.value) usersBySystem;
 
       inherit modules;
-      darwinModules = modules.darwin;
-      homeModules = modules.home;
+      darwinModules = modules.darwin or { };
+      homeModules = modules.home or { };
       # TODO: how to extract NixOS tests?
-      nixosModules = modules.nixos;
+      nixosModules = modules.nixos or { };
 
       templates = importDir (src + "/templates") (
         entries:
