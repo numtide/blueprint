@@ -4,6 +4,7 @@
 
 * `devshells/` for devshells.
 * `hosts/` for machine configurations.
+* `users/` for standalone home-manager configurations 
 * `lib/` for Nix functions.
 * `modules/` for NixOS and other modules.
 * `packages/` for packages.
@@ -151,6 +152,65 @@ Expected return value:
 Flake outputs:
 
 > Depending on the system type returned, the flake outputs will be the same as detailed for NixOS or Darwin above.
+
+### `users/<name>/(default.nix|home.nix)`
+
+Each folder contains a standalone home-manager configuration:
+
+#### `home.nix`
+
+Evaluates to a standalone home-manager configuration.
+
+Additonal values passed:
+
+* `inputs` maps to the current flake inputs.
+* `flake` maps to `inputs.self`.
+* `pkgs` an instance of nixpkgs, see [configuration](configuration.md) on how it's configured.* `perSystem`: contains the packages of all the inputs, filtered per sysstem.
+    Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+
+Flake outputs:
+
+* `userConfigurations."<name>@<system>"`
+
+##### home-manager example
+
+```nix
+{ flake, inputs, pkgs, perSystem }:
+{
+  imports = [
+    flake.modules.home.zsh
+  ];
+
+  home.username = "myUser";
+  home.homeDirectory = "/home/myUser";
+}
+```
+
+#### `default.nix`
+
+If present, this file takes precedence over `home.nix` and is designed as an escape hatch, allowing the user complete control over `homeManagerConfiguration` calls.
+
+```nix
+{ flake, inputs, ... }:
+{
+  value = inputs.home-manager.lib.homeManagerConfiguration {
+    home.username = "myUser";
+    ...
+  };
+}
+```
+
+Additional values passed:
+
+* `inputs` maps to the current flake inputs.
+* `flake` maps to `inputs.self`.
+
+Expected return value:
+
+* `value` - the evaluated home-manager configuration.
+
+Flake outputs:
+* `homeConfigurations.<name>`
 
 ### `lib/default.nix`
 

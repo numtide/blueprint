@@ -45,6 +45,7 @@ What it's bad for:
 ## Features
 
 * ./hosts for NixOS and Darwin configurations
+* ./homes for standalone Home Manager configurations
 * ./packages for your packages.
 * ./lib for your libraries.
 * ./templates for your flake templates.
