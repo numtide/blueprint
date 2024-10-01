@@ -201,6 +201,8 @@ Flake outputs:
 * `checks.<system>.pkgs-<pname>` - also contains the package for `nix flake check`.
 * `checks.<system>.pkgs-<pname>-<tname>` - adds all the package `passthru.tests`
 
+To consume a package inside a host from the same flake, `perSystem.self.<pname>`
+
 #### `default.nix` or top-level `package.nix`
 
 Takes the "per-system" arguments. On top of this, it also takes a `pname`
