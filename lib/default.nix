@@ -28,12 +28,13 @@ let
 
           # Handle nixpkgs specially.
           pkgs =
-            if (nixpkgs.config or { }) == { } then
+            if (nixpkgs.config or { }) == { } && (nixpkgs.overlays or [ ]) == [ ] then
               perSystem.nixpkgs
             else
               import inputs.nixpkgs {
                 inherit system;
-                config = nixpkgs.config;
+                config = nixpkgs.config or { };
+                overlays = nixpkgs.overlays or [ ];
               };
         in
         lib.makeScope lib.callPackageWith (_: {

@@ -33,7 +33,7 @@ Example:
 
 ## nixpkgs.config
 
-If set, it will create a new instance of nixpkgs for each systems, with the passed config.
+If set, blueprint will create a new instance of nixpkgs for each systems, with the passed config.
 
 Default: `inputs.nixpkgs.legacyPackages.<system>`.
 
@@ -46,6 +46,32 @@ Example:
   outputs = inputs: inputs.blueprint {
     inherit inputs;
     nixpkgs.config.allowUnfree = true;
+  };
+}
+```
+
+## nixpkgs.overlays
+
+> NOTE: It's better to use `perSystem` composition style instead of overlays if you can.
+
+If set, blueprint will create a new instance of nixpkgs for each systems, with the passed config.
+
+Default: `inputs.nixpkgs.legacyPackages.<system>`.
+
+Type: list of functions.
+
+Example:
+
+```nix
+{
+  outputs = inputs: inputs.blueprint {
+    inherit inputs;
+    nixpkgs.config.overlays = [
+      inputs.otherflake.overlays.default
+      (final: prev: {
+        git = final.gitMinimal;
+      })
+    ];
   };
 }
 ```
