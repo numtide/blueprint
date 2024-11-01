@@ -60,10 +60,6 @@ and more!
 
 Don't
 
-## How to support overlays?
-
-Don't
-
 ## Related projects
 
 * [flake-utils](https://github.com/numtide/flake-utils) the OG for flake libraries.
