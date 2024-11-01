@@ -66,7 +66,7 @@ Example:
 {
   outputs = inputs: inputs.blueprint {
     inherit inputs;
-    nixpkgs.config.overlays = [
+    nixpkgs.overlays = [
       inputs.otherflake.overlays.default
       (final: prev: {
         git = final.gitMinimal;
