@@ -56,13 +56,10 @@ What it's bad for:
 
 and more!
 
-## How to support overrides?
-
-Don't
-
 ## Related projects
 
 * [flake-utils](https://github.com/numtide/flake-utils) the OG for flake libraries.
 * [flake-parts](https://flake.parts) uses the Nix module system. It's too complicated for my taste.
 * [std](https://github.com/divnix/std)
 * [snowflake-lib](https://github.com/snowfallorg/lib)
+* [clan-core](https://git.clan.lol/clan/clan-core) is an all-in-one solution to manage your deployments.
