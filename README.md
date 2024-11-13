@@ -1,8 +1,19 @@
-# blueprint - flakes made easy
+<div align="center">
 
-> **STATUS: experimental**
+# blueprint
 
-## What's blueprint?
+<img src="docs/blueprint.svg" height="150"/>
+
+**Nix without the glue code**
+
+*A <a href="https://numtide.com/">numtide</a> project.*
+
+<p>
+<img alt="Static Badge" src="https://img.shields.io/badge/Status-experimental-orange">
+<a href="https://app.element.io/#/room/#home:numtide.com"><img src="https://img.shields.io/badge/Support-%23numtide-blue"/></a>
+</p>
+
+</div>
 
 Blueprint replaces Nix glue code with a regular folder structure. Focus on deploying your infrastructure / package sets instead of reinventing the wheel.
 
