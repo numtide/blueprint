@@ -231,12 +231,19 @@ let
           text = ''
             set -euo pipefail
 
+            # If no arguments are passed, default to formatting the whole project
+            # If git it not available, fallback on current directory.
+            if [[ $# = 0 ]]; then
+              prj_root=$(git rev-parse --show-toplevel 2>/dev/null || echo .)
+              set -- "$prj_root"
+            fi
+
             # Not a git repo, or git is not installed. Fallback
             if ! git rev-parse --is-inside-work-tree; then
               exec nixfmt "$@"
             fi
 
-            # By default `nix fmt` passes "." as the first argument.
+            # Use git to traverse since nixfmt doesn't have good traversal
             git ls-files "$@" | grep '\.nix$' | xargs --no-run-if-empty nixfmt
           '';
         })
