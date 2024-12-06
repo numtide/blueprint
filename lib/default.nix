@@ -204,6 +204,32 @@ let
         ) (lib.attrsToList hosts)
       );
 
+      publisherArgs = {
+        inherit flake inputs;
+        inherit (flake) perSystem;
+      };
+
+      expectsPublisherArgs =
+        module:
+        builtins.isFunction module
+        && builtins.all (arg: builtins.elem arg (builtins.attrNames publisherArgs)) (
+          builtins.attrNames (builtins.functionArgs module)
+        );
+
+      # Checks if the given module is wrapped in a function accepting one or more of publisherArgs.
+      # If so, call that function. This allows modules to refer to the flake where it is
+      # defined, while the module arguments "flake", "inputs" and "perSystem" refer to the flake
+      # where the module is consumed.
+      injectPublisherArgs =
+        modulePath:
+        let
+          module = import modulePath;
+        in
+        if expectsPublisherArgs module then
+          lib.setDefaultModuleLocation modulePath (module publisherArgs)
+        else
+          modulePath;
+
       modules =
         let
           path = src + "/modules";
@@ -212,7 +238,12 @@ let
           );
         in
         lib.optionalAttrs (builtins.pathExists path) (
-          lib.genAttrs moduleDirs (name: importDir (path + "/${name}") entriesPath)
+          lib.genAttrs moduleDirs (
+            name:
+            lib.mapAttrs (_name: moduleDir: injectPublisherArgs moduleDir) (
+              importDir (path + "/${name}") entriesPath
+            )
+          )
         );
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
