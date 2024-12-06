@@ -204,6 +204,18 @@ let
         ) (lib.attrsToList hosts)
       );
 
+      # Check if the given module is wrapped in a function expecting "publisher" as a named argument,
+      # and - if so - call that function with the current flake. This enables us to reference
+      # the publishing flake when re-using exported modules in consuming, downstream flakes.
+      withPublisher =
+        module:
+        let
+          module' = if builtins.isString module || builtins.isPath module then import module else module;
+          wantsPublisher =
+            builtins.isFunction module' && builtins.hasAttr "publisher" (builtins.functionArgs module');
+        in
+        if wantsPublisher then lib.modules.importApply module { publisher = flake; } else module;
+
       modules =
         let
           path = src + "/modules";
@@ -212,7 +224,9 @@ let
           );
         in
         lib.optionalAttrs (builtins.pathExists path) (
-          lib.genAttrs moduleDirs (name: importDir (path + "/${name}") entriesPath)
+          lib.genAttrs moduleDirs (
+            name: lib.mapAttrs (_name: module: withPublisher module) (importDir (path + "/${name}") entriesPath)
+          )
         );
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
