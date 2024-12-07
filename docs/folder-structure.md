@@ -185,6 +185,12 @@ For the following folder names, we also map them to the following outputs:
 
 These and other unrecognized types also make to `modules.<type>.<name>`.
 
+Each module can optionally be wrapped in a function that takes a single named
+argument called `publisher`. If used, that function will be called with `publisher`
+set to the current, defining flake before exposing that module.
+This can be used to reference the defining flake when the module
+is imported in another flake and the module argument `flake` points the consumer.
+
 ### `package.nix`, `formatter.nix`, `packages/<pname>(.nix|/default.nix)`
 
 This `packages/` folder contains all your packages.
