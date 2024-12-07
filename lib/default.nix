@@ -346,6 +346,8 @@ let
                 lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
               )
             ))
+            # load checks from the /checks folder. Those take precedence over the others.
+            (optionalPathAttrs (src + "/checks") (path: importDir path lib.id))
           ]
           ++ (lib.optional (inputs.self.lib.tests or { } != { }) {
             lib-tests = pkgs.runCommandLocal "lib-tests" { nativeBuildInputs = [ pkgs.nix-unit ]; } ''

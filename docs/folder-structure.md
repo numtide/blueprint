@@ -2,6 +2,7 @@
 
 ## High-level
 
+* `checks/` for flake checks.
 * `devshells/` for devshells.
 * `hosts/` for machine configurations.
 * `lib/` for Nix functions.
@@ -207,6 +208,20 @@ To consume a package inside a host from the same flake, `perSystem.self.<pname>`
 
 Takes the "per-system" arguments. On top of this, it also takes a `pname`
 argument.
+
+### `checks/<pname>(.nix|/default.nix)`
+
+The `checks/` folder can be populated by packages that will be run when `nix flake checks` is invoked.
+
+The flake checks are also populate by some of the other attributes, like `packages` and `hosts`.
+
+Inputs:
+
+* The [per-system](#per-system) values, plus the `pname` attribute.
+
+Flake outputs:
+
+* `checks.<system>.<pname>` - will contain the package
 
 #### `templates/<name>/`
 
