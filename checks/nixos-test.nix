@@ -5,10 +5,15 @@ pkgs.testers.runNixOSTest (_: {
   nodes.machine = _: {
     imports = [
       (
-        { pkgs, ... }:
+        { pkgs, lib, ... }:
 
         {
-          config = pkgs.lib.mkIf true { };
+          config =
+            # mysteriously broken:
+            # pkgs.lib.mkIf true { }
+
+            # works:
+            lib.mkIf true { };
         }
       )
     ];
