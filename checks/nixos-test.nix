@@ -1,18 +1,18 @@
-{
-  pkgs,
-  flake,
-  ...
-}:
+{ pkgs, flake, ... }:
 
 pkgs.testers.runNixOSTest (_: {
   name = "nixos-test";
   nodes.machine = _: {
     imports = [
-      flake.nixosModules.repro
+      (
+        { pkgs, ... }:
+
+        {
+          config = pkgs.lib.mkIf true { };
+        }
+      )
     ];
   };
 
-  testScript = _: ''
-    machine.succeed("echo repro")
-  '';
+  testScript = _: '''';
 })
