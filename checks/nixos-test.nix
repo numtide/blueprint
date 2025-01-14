@@ -10,8 +10,6 @@ pkgs.testers.runNixOSTest (_: {
     imports = [
       flake.nixosModules.repro
     ];
-
-    repro.enable = false;
   };
 
   testScript = _: ''
