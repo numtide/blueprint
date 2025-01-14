@@ -5,6 +5,7 @@
 * `checks/` for flake checks.
 * `devshells/` for devshells.
 * `hosts/` for machine configurations.
+* `hosts/*/users/` for Home Manager configurations.
 * `lib/` for Nix functions.
 * `modules/` for NixOS and other modules.
 * `packages/` for packages.
@@ -152,6 +153,51 @@ Expected return value:
 Flake outputs:
 
 > Depending on the system type returned, the flake outputs will be the same as detailed for NixOS or Darwin above.
+
+### `hosts/<hostname>/users/(<username>.nix|<username>/home-configuration.nix)`
+
+Defines a configuration for a Home Manager user. Users can either be defined as a nix file or directory containing
+a `home-configuration.nix` file.
+
+Before using this mapping, add the `home-manager` input to your `flake.nix` file:
+
+```nix
+{
+  inputs = {
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+  };
+}
+```
+
+Additional values passed:
+
+* `inputs` maps to the current flake inputs.
+* `flake` maps to `inputs.self`.
+* `perSystem`: contains the packages of all the inputs, filtered per system.
+    Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+
+> The simplest way to have a common/shared user configuration between multiple systems is to create a
+> module at `modules/home/<name>.nix` ([docs](#modulestypenamenamenix)), and import that module
+> from `inputs.self.homeModules.<name>` for each user that should inherit it. This pattern makes
+> it easy to apply system-specific customizations on top of a shared, generic configuration.
+
+#### NixOS and nix-darwin
+
+If `home-manager` is an input to the flake, each host with any users defined will have the appropriate home-manager
+module imported and each user created automatically.
+
+The options `home-manager.useGlobalPkgs` and `home-manager.useUserPkgs` will default to true.
+
+#### Standalone configurations
+
+Users are also standalone Home Manager configurations. A user defined as `hosts/pc1/users/max.nix` can be
+applied using the `home-manager` CLI as `.#max@pc1`. The output name can be elided entirely if the current username
+and hostname match it, e.g. `home-manager switch --flake .` (note the lack of `#`).
+
+Because the username is part of the path to the configuration, the `home.username` option will default to
+this username. This can be overridden manually. Likewise, `home.homeDirectory` will be set by default based
+on the username and operating system (`/Users/${username}` on macOS, `/home/${username}` on Linux).
 
 ### `lib/default.nix`
 
