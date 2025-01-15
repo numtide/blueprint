@@ -1,41 +1,29 @@
-{ pkgs, flake, ... }:
+{ pkgs, ... }:
 
-let
-  testModule =
-    { pkgs }:
+pkgs.testers.runNixOSTest (
+  { ... }:
+  {
+    name = "nixos-test";
 
-    pkgs.testers.runNixOSTest (
-      { ... }:
+    nodes.machine =
+      { pkgs, ... }:
       {
-        name = "nixos-test";
+        imports = [
+          (
+            { ... }:
 
-        nodes.machine =
-          { pkgs, ... }:
-          {
-            imports = [
-              (
-                { ... }:
+            {
+              config =
+                # mysteriously broken:
+                pkgs.lib.mkIf true { };
 
-                {
-                  config =
-                    # mysteriously broken:
-                    pkgs.lib.mkIf true { };
+              # works:
+              # lib.mkIf true { };
+            }
+          )
+        ];
+      };
 
-                  # works:
-                  # lib.mkIf true { };
-                }
-              )
-            ];
-          };
-
-        testScript = _: '''';
-      }
-    );
-
-in
-
-pkgs.runCommand "repro"
-  { passthru.tests.repro = testModule { inherit pkgs; }; }
-  ''
-    touch $out
-  ''
+    testScript = _: '''';
+  }
+)
