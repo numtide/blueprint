@@ -1,34 +1,38 @@
 { pkgs, flake, ... }:
 
 let
-  outerFlake = flake;
+  testModule =
+    { pkgs }:
+
+    pkgs.testers.runNixOSTest (
+      { ... }:
+      {
+        name = "nixos-test";
+
+        nodes.machine =
+          { pkgs, ... }:
+          {
+            imports = [
+              (
+                { ... }:
+
+                {
+                  config =
+                    # mysteriously broken:
+                    pkgs.lib.mkIf true { };
+
+                  # works:
+                  # lib.mkIf true { };
+                }
+              )
+            ];
+          };
+
+        testScript = _: '''';
+      }
+    );
 in
 
-pkgs.testers.runNixOSTest (_: {
-  name = "nixos-test";
-  nodes.machine = _: {
-    imports = [
-      (
-        { flake, pkgs, lib, ... }:
-
-        {
-          imports = [
-            flake.inputs.extra-container.nixosModules.default
-
-            # works:
-            # outerFlake.inputs.extra-container.nixosModules.default
-          ];
-
-          config =
-            # mysteriously broken:
-            # pkgs.lib.mkIf true { }
-
-            # works:
-            lib.mkIf true { };
-        }
-      )
-    ];
-  };
-
-  testScript = _: '''';
-})
+pkgs.runCommand "repro" { passthru.tests.repro = testModule { inherit pkgs; }; } ''
+  touch $out
+''
