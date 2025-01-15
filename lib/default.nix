@@ -206,6 +206,8 @@ let
 
       publisherArgs = {
         inherit flake inputs;
+
+        # TODO: this isn't there.
         inherit (flake) perSystem;
       };
 

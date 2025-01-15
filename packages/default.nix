@@ -1,52 +1,30 @@
-{ pkgs, flake, ... }:
+{
+  pkgs,
+  flake,
+  system,
+  ...
+}:
 
-let
-  lib = pkgs.lib;
-  nixos = import (lib.path.append pkgs.path "nixos/lib") { inherit lib; };
-in
-nixos.runTest (
-  /*
-    TODO: what are these arguments? if i put pkgs in here i'm getting:
-
-    error: infinite recursion encountered
-    at /nix/store/cb1gs888vfqxawvc65q1dk6jzbayh3wz-source/lib/modules.nix:1016:24:
-      1015|     { _type = "override";
-      1016|       inherit priority content;
-          |                        ^
-      1017|     };
-  */
-  { ... }:
+pkgs.testers.runNixOSTest (
+  { lib, ... }:
   {
     name = "nixos-test";
 
-    defaults._module.args = {
-      inherit flake;
-    };
-
     nodes.machine =
-      { ... }:
+      { pkgs, ... }:
       {
-        imports = [
-          (
-            # this is the module that in the real scenario lives outside of the `runTest` caller code
-            { config, pkgs, lib, flake, ... }:
+        imports = [ flake.nixosModules.unrepro ];
 
-            {
-              imports = [
-                flake.inputs.extra-container.nixosModules.default
-              ];
-              config =
-                # mysteriously broken:
-                # pkgs.lib.mkIf true { };
-
-              # works:
-              lib.mkIf true { };
-            }
-          )
+        environment.systemPackages = [
+          (pkgs.writeShellScriptBin "hello2" ''
+            exec ${lib.getExe flake.packages.${system}.hello}
+          '')
         ];
       };
 
-    testScript = _: '''';
-    hostPkgs = pkgs;
+    testScript = _: ''
+      machine.succeed("hello")
+      machine.succeed("hello2")
+    '';
   }
 )
