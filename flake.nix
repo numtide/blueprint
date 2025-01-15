@@ -4,9 +4,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
-
-    extra-container.url = "github:erikarvstedt/extra-container";
-    extra-container.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
