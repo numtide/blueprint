@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, flake, ... }:
 
 let
   lib = pkgs.lib;
@@ -19,21 +19,28 @@ nixos.runTest (
   {
     name = "nixos-test";
 
+    defaults._module.args = {
+      inherit flake;
+    };
+
     nodes.machine =
       { ... }:
       {
         imports = [
           (
             # this is the module that in the real scenario lives outside of the `runTest` caller code
-            { pkgs, ... }:
+            { config, pkgs, lib, flake, ... }:
 
             {
+              imports = [
+                flake.inputs.extra-container.nixosModules.default
+              ];
               config =
                 # mysteriously broken:
-                pkgs.lib.mkIf true { };
+                # pkgs.lib.mkIf true { };
 
               # works:
-              # lib.mkIf true { };
+              lib.mkIf true { };
             }
           )
         ];
