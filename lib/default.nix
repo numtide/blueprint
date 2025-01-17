@@ -385,7 +385,28 @@ let
               )
             ))
             # load checks from the /checks folder. Those take precedence over the others.
-            (optionalPathAttrs (src + "/checks") (path: importDir path lib.id))
+            (filterPlatforms system (
+              optionalPathAttrs (src + "/checks") (
+                path:
+                let
+                  importChecksFn = lib.mapAttrs (
+                    pname:
+                    { type, path }:
+                    import path {
+                      inherit
+                        pname
+                        flake
+                        inputs
+                        system
+                        pkgs
+                        ;
+                    }
+                  );
+                in
+
+                (importDir path importChecksFn)
+              )
+            ))
           ]
           ++ (lib.optional (inputs.self.lib.tests or { } != { }) {
             lib-tests = pkgs.runCommandLocal "lib-tests" { nativeBuildInputs = [ pkgs.nix-unit ]; } ''
