@@ -145,7 +145,7 @@ let
       perSystemModule =
         { pkgs, ... }:
         {
-          _module.args.perSystem = systemArgs.${pkgs.system}.perSystem;
+          _module.args.perSystem = lib.mkDefault systemArgs.${pkgs.system}.perSystem;
         };
 
       hosts = importDir (src + "/hosts") (
@@ -206,7 +206,7 @@ let
 
       publisherArgs = {
         inherit flake inputs;
-        inherit (flake) perSystem;
+        perSystem = true;
       };
 
       expectsPublisherArgs =
@@ -226,7 +226,15 @@ let
           module = import modulePath;
         in
         if expectsPublisherArgs module then
-          lib.setDefaultModuleLocation modulePath (module publisherArgs)
+          {
+            _file = modulePath;
+            imports = [
+              (module publisherArgs)
+              ({pkgs, ... }: {
+                _module.args.perSystem = systemArgs.${pkgs.system}.perSystem;
+              })
+            ];
+          }
         else
           modulePath;
 

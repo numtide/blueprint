@@ -185,16 +185,37 @@ For the following folder names, we also map them to the following outputs:
 
 These and other unrecognized types also exposed as `modules.<type>.<name>`.
 
-If a module is wrapped in a function that accepts one (or more) of the following arguments:
+#### Wrap modules to refer to the flake where they are defined.
+
+Conventionally nixos module arguments are populated during when evaluating a nixos system.
+This means, module arguments such as `flake`, `inputs` and others most often refer to the flake
+where that module is consumed, which might not be the one where it is defined. This means that
+in order to import and use a module from another flake, we would have to manually add all of their
+inputs to our own flake.
+
+In order to avoid that, we ship a mechanism which allows modules to refer to the flake in which
+they are defined: If a module is wrapped in a function that accepts one (or more) of the following 
+arguments:
 
 * `flake`
 * `inputs`
 * `perSystem`
 
-Then that function is called before exposing the module as an output.
-This allows modules to refer to the flake where it is defined, while the module arguments
-`flake`, `inputs` and `perSystem` refer to the flake where the module is consumed. Those can
-be but do not need to be the same flake.
+Then that function is called before exposing the module as an output. `flake` and `inputs`
+directly contain the current flake and its inputs. Requesting `perSystem` on the other hand
+only acts as a flag which changes the module argument `perSystem` to refer to the defining flake.
+
+``` nix
+{ inputs, perSystem, ...}:
+{ pkgs, perSystem }: {
+    imports = [ inputs.some-input.nixosModules.some-module ];
+    config.environment.systemPackages = [
+        perSystem.some-input.some-package
+    ];
+}
+
+```
+
 
 ### `package.nix`, `formatter.nix`, `packages/<pname>(.nix|/default.nix)`
 
