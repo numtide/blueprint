@@ -206,9 +206,7 @@ let
 
       publisherArgs = {
         inherit flake inputs;
-
-        # TODO: this isn't there.
-        inherit (flake) perSystem;
+        perSystem = true;
       };
 
       expectsPublisherArgs =
@@ -226,9 +224,16 @@ let
         modulePath:
         let
           module = import modulePath;
+          args = lib.removeAttrs publisherArgs [ "perSystem" ];
         in
         if expectsPublisherArgs module then
-          lib.setDefaultModuleLocation modulePath (module publisherArgs)
+          {
+            _file = modulePath;
+            imports = [
+              (module args)
+              perSystemModule
+            ];
+          }
         else
           modulePath;
 
