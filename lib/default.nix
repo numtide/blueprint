@@ -148,6 +148,120 @@ let
           _module.args.perSystem = systemArgs.${pkgs.system}.perSystem;
         };
 
+      home-manager =
+        inputs.home-manager
+          or (throw ''home configurations require Home Manager. To fix this, add `inputs.home-manager.url = "github:nix-community/home-manager";` to your flake'');
+
+      # Sets up declared users without any user intervention, and sets the
+      # options that most people would set anyway. The module is only returned
+      # if home-manager is an input and the host has at least one user with a
+      # home manager configuration. With this module, most users will not need
+      # to manually configure Home Manager at all.
+      mkHomeUsersModule =
+        hostname: homeManagerModule:
+        let
+          module =
+            { perSystem, ... }:
+            {
+              imports = [ homeManagerModule ];
+              home-manager.sharedModules = [ perSystemModule ];
+              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.users = homesNested.${hostname};
+              home-manager.useGlobalPkgs = lib.mkDefault true;
+              home-manager.useUserPackages = lib.mkDefault true;
+            };
+        in
+        lib.optional (builtins.hasAttr hostname homesNested) module;
+
+      # Attribute set mapping hostname (defined in hosts/) to a set of home
+      # configurations (modules) for that host. If a host has no home
+      # configuration, it will be omitted from the set. Likewise, if the user
+      # directory does not contain a home-configuration.nix file, it will
+      # be silently omitted - not defining a configuration is not an error.
+      homesNested =
+        let
+          getEntryPath =
+            _username: userEntry:
+            if userEntry.type == "regular" then
+              userEntry.path
+            else if builtins.pathExists (userEntry.path + "/home-configuration.nix") then
+              userEntry.path + "/home-configuration.nix"
+            else
+              null;
+
+          # Returns an attrset mapping username to home configuration path. It may be empty
+          # if no users have a home configuration.
+          mkHostUsers =
+            userEntries:
+            let
+              hostUsers = lib.mapAttrs getEntryPath userEntries;
+            in
+            lib.filterAttrs (_name: value: value != null) hostUsers;
+
+          mkHosts =
+            hostEntries:
+            let
+              hostDirs = lib.filterAttrs (_: entry: entry.type == "directory") hostEntries;
+              hostToUsers = _hostname: entry: importDir (entry.path + "/users") mkHostUsers;
+              hosts = lib.mapAttrs hostToUsers hostDirs;
+            in
+            lib.filterAttrs (_hostname: users: users != { }) hosts;
+        in
+        importDir (src + "/hosts") mkHosts;
+
+      # Attrset of ${system}.homeConfigurations."${username}@${hostname}"
+      standaloneHomeConfigurations =
+        let
+          mkHomeConfiguration =
+            {
+              username,
+              modulePath,
+              pkgs,
+            }:
+            home-manager.lib.homeManagerConfiguration {
+              inherit pkgs;
+              extraSpecialArgs = specialArgs;
+              modules = [
+                perSystemModule
+                modulePath
+                {
+                  home.username = lib.mkDefault username;
+                  # Home Manager would use builtins.getEnv prior to 20.09, but
+                  # this feature was removed to make it pure. However, since
+                  # we know the operating system and username ahead of time,
+                  # it's safe enough to automatically set a default for the home
+                  # directory and let users customize it if they want. This is
+                  # done automatically in the NixOS or nix-darwin modules too.
+                  home.homeDirectory = lib.mkDefault (
+                    if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}"
+                  );
+                }
+              ];
+            };
+
+          homesFlat = lib.concatMapAttrs (
+            hostname: hostUserModules:
+            lib.mapAttrs' (username: modulePath: {
+              name = "${username}@${hostname}";
+              value = {
+                inherit hostname username modulePath;
+              };
+            }) hostUserModules
+          ) homesNested;
+        in
+        eachSystem (
+          { pkgs, ... }:
+          {
+            homeConfigurations = lib.mapAttrs (
+              _name: homeData:
+              mkHomeConfiguration {
+                inherit (homeData) modulePath username;
+                inherit pkgs;
+              }
+            ) homesFlat;
+          }
+        );
+
       hosts = importDir (src + "/hosts") (
         entries:
         let
@@ -155,24 +269,24 @@ let
 
           loadDefault = path: loadDefaultFn (import path { inherit flake inputs; });
 
-          loadNixOS = path: {
+          loadNixOS = hostname: path: {
             class = "nixos";
             value = inputs.nixpkgs.lib.nixosSystem {
               modules = [
                 perSystemModule
                 path
-              ];
+              ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
               inherit specialArgs;
             };
           };
 
-          loadNixDarwin = path: {
+          loadNixDarwin = hostname: path: {
             class = "nix-darwin";
             value = inputs.nix-darwin.lib.darwinSystem {
               modules = [
                 perSystemModule
                 path
-              ];
+              ] ++ mkHomeUsersModule hostname home-manager.darwinModules.default;
               inherit specialArgs;
             };
           };
@@ -181,15 +295,22 @@ let
             name:
             { path, type }:
             if builtins.pathExists (path + "/default.nix") then
-              loadDefault (path + "/default.nix")
+              loadDefault name (path + "/default.nix")
             else if builtins.pathExists (path + "/configuration.nix") then
-              loadNixOS (path + "/configuration.nix")
+              loadNixOS name (path + "/configuration.nix")
             else if builtins.pathExists (path + "/darwin-configuration.nix") then
-              loadNixDarwin (path + "/darwin-configuration.nix")
+              loadNixDarwin name (path + "/darwin-configuration.nix")
+            else if builtins.hasAttr name homesNested then
+              # If there are any home configurations defined for this host, they
+              # must be standalone configurations since there is no OS config.
+              # No config should be returned, but no error should be thrown either.
+              null
             else
               throw "host '${name}' does not have a configuration";
+
+          hostsOrNull = lib.mapAttrs loadHost entries;
         in
-        lib.mapAttrs loadHost entries
+        lib.filterAttrs (_n: v: v != null) hostsOrNull
       );
 
       hostsByCategory = lib.mapAttrs (_: hosts: lib.listToAttrs hosts) (
@@ -328,6 +449,14 @@ let
               { newScope, ... }: lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries
             )
           );
+
+      # Defining homeConfigurations under legacyPackages allows the home-manager CLI
+      # to automatically detect the right output for the current system without
+      # either manually defining the pkgs set (requires explicit system) or breaking
+      # nix3 CLI output (`packages` output expects flat attrset)
+      # FIXME: Find another way to make this work without introducing legacyPackages.
+      #        May involve changing upstream home-manager.
+      legacyPackages = lib.optionalAttrs (homesNested != { }) standaloneHomeConfigurations;
 
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
