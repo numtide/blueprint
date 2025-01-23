@@ -280,16 +280,23 @@ let
             };
           };
 
-          loadNixDarwin = hostname: path: {
-            class = "nix-darwin";
-            value = inputs.nix-darwin.lib.darwinSystem {
-              modules = [
-                perSystemModule
-                path
-              ] ++ mkHomeUsersModule hostname home-manager.darwinModules.default;
-              inherit specialArgs;
+          loadNixDarwin =
+            hostname: path:
+            let
+              nix-darwin =
+                inputs.nix-darwin
+                  or (throw ''${path} depends on nix-darwin. To fix this, add `inputs.nix-darwin.url = "github:Lnl7/nix-darwin";` to your flake'');
+            in
+            {
+              class = "nix-darwin";
+              value = nix-darwin.lib.darwinSystem {
+                modules = [
+                  perSystemModule
+                  path
+                ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
+                inherit specialArgs;
+              };
             };
-          };
 
           loadHost =
             name:
