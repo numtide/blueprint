@@ -293,7 +293,7 @@ let
                 modules = [
                   perSystemModule
                   path
-                ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
+                ] ++ mkHomeUsersModule hostname home-manager.darwinModules.default;
                 inherit specialArgs;
               };
             };
