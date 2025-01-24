@@ -224,18 +224,24 @@ let
               modules = [
                 perSystemModule
                 modulePath
-                {
-                  home.username = lib.mkDefault username;
-                  # Home Manager would use builtins.getEnv prior to 20.09, but
-                  # this feature was removed to make it pure. However, since
-                  # we know the operating system and username ahead of time,
-                  # it's safe enough to automatically set a default for the home
-                  # directory and let users customize it if they want. This is
-                  # done automatically in the NixOS or nix-darwin modules too.
-                  home.homeDirectory = lib.mkDefault (
-                    if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}"
-                  );
-                }
+                (
+                  { config, ... }:
+                  {
+                    home.username = lib.mkDefault username;
+                    # Home Manager would use builtins.getEnv prior to 20.09, but
+                    # this feature was removed to make it pure. However, since
+                    # we know the operating system and username ahead of time,
+                    # it's safe enough to automatically set a default for the home
+                    # directory and let users customize it if they want. This is
+                    # done automatically in the NixOS or nix-darwin modules too.
+                    home.homeDirectory =
+                      let
+                        username = config.home.username;
+                        homeDir = if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
+                      in
+                      lib.mkDefault homeDir;
+                  }
+                )
               ];
             };
 
