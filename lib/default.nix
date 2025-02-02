@@ -482,8 +482,11 @@ let
           { path, type }:
           {
             path = path;
-            # FIXME: how can we add something more meaningful?
-            description = name;
+            description =
+              if builtins.pathExists (path + "/flake.nix") then
+                (import (path + "/flake.nix")).description or name
+              else
+                name;
           }
         ) entries
       );
