@@ -1,5 +1,5 @@
 {
-  description = "my flake";
+  description = "Simple flake with a devshell";
 
   # Add all your dependencies here
   inputs = {
