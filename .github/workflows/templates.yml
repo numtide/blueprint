@@ -22,9 +22,10 @@ jobs:
   matrix:
     name: Check template
     needs: [find-templates]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ ubuntu-latest, macos-latest ]
         folder: ${{ fromJSON(needs.find-templates.outputs.folders) }}
     steps:
       - uses: cachix/install-nix-action@v27
