@@ -59,7 +59,7 @@ pkgs.mkShell {
 }
 ```
 
-### `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix)`
+### `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
 
 Each folder contains either a NixOS or nix-darwin configuration:
 
@@ -122,6 +122,31 @@ Flake outputs:
 
 * `darwinConfiguration.<hostname>`
 * `checks.<system>.darwin-<hostname>` - contains the system closure.
+
+#### `system-configuration.nix`
+
+Evaluates to a [system-manager](https://github.com/numtide/system-manager)
+configuration.
+
+To support it, also add the following lines to the `flake.nix` file:
+
+```nix
+{
+  inputs.system-manager.url = "github:numtide/system-manager";
+}
+```
+
+Additional values passed:
+
+* `inputs` maps to the current flake inputs.
+* `flake` maps to `inputs.self`.
+* `perSystem`: contains the packages of all the inputs, filtered per system.
+    Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+
+Flake outputs:
+
+* `systemConfiguration.<hostname>`
+* `checks.<system>.system-<hostname>` - contains the system closure.
 
 #### `default.nix`
 
