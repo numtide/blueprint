@@ -55,7 +55,7 @@ What it's bad for:
 
 ## Features
 
-* ./hosts for NixOS and Darwin configurations
+* ./hosts for NixOS, Darwin and system-manager configurations
 * ./packages for your packages.
 * ./lib for your libraries.
 * ./templates for your flake templates.

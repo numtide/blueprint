@@ -304,6 +304,24 @@ let
               };
             };
 
+          loadSystemManager =
+            _hostname: path:
+            let
+              system-manager =
+                inputs.system-manager
+                  or (throw ''${path} depends on system-manager. To fix this, add `inputs.system-manager.url = "github:numtide/system-manager"; to your flake'');
+            in
+            {
+              class = "system-manager";
+              value = system-manager.lib.makeSystemConfig {
+                modules = [
+                  perSystemModule
+                  path
+                ];
+                extraSpecialArgs = specialArgs;
+              };
+            };
+
           loadHost =
             name:
             { path, type }:
@@ -313,6 +331,8 @@ let
               loadNixOS name (path + "/configuration.nix")
             else if builtins.pathExists (path + "/darwin-configuration.nix") then
               loadNixDarwin name (path + "/darwin-configuration.nix")
+            else if builtins.pathExists (path + "/system-configuration.nix") then
+              loadSystemManager name (path + "/system-configuration.nix")
             else if builtins.hasAttr name homesNested then
               # If there are any home configurations defined for this host, they
               # must be standalone configurations since there is no OS config.
@@ -333,6 +353,8 @@ let
             "nixosConfigurations"
           else if x.value.class == "nix-darwin" then
             "darwinConfigurations"
+          else if x.value.class == "system-manager" then
+            "systemConfigs"
           else
             throw "host '${x.name}' of class '${x.value.class or "unknown"}' not supported"
         ) (lib.attrsToList hosts)
@@ -472,6 +494,7 @@ let
 
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
+      systemConfigs = lib.mapAttrs (_: x: x.value) (hostsByCategory.systemConfigs or { });
 
       inherit modules;
 
@@ -526,6 +549,12 @@ let
             (withPrefix "darwin-" (
               lib.mapAttrs (_: x: x.system) (
                 lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
+              )
+            ))
+            # add system-manager closures to checks
+            (withPrefix "system-" (
+              lib.mapAttrs (_: x: x) (
+                lib.filterAttrs (_: x: x.system == system) (inputs.self.systemConfigs or { })
               )
             ))
             # load checks from the /checks folder. Those take precedence over the others.
