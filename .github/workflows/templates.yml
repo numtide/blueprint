@@ -1,0 +1,33 @@
+name: "Template"
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  find-templates:
+    name: Find Templates
+    runs-on: ubuntu-latest
+    outputs:
+      folders: ${{ steps.jobs.outputs.folders }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: jobs
+        run: |
+          folders=$(find templates -mindepth 1 -maxdepth 1 -type d | jq -R . | jq -sc .)
+          echo "$folders"
+          echo "folders=$folders" >> $GITHUB_OUTPUT
+
+  matrix:
+    name: Check template
+    needs: [find-templates]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        folder: ${{ fromJSON(needs.find-templates.outputs.folders) }}
+    steps:
+      - uses: cachix/install-nix-action@v27
+      - uses: actions/checkout@v4
+      - run: nix flake check --override-input blueprint ../..
+        working-directory: ${{ matrix.folder }}
