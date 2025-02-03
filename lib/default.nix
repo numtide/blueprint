@@ -206,7 +206,6 @@ let
 
       publisherArgs = {
         inherit flake inputs;
-        inherit (flake) perSystem;
       };
 
       expectsPublisherArgs =
