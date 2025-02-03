@@ -235,11 +235,9 @@ If a module is wrapped in a function that accepts one (or more) of the following
 
 * `flake`
 * `inputs`
-* `perSystem`
 
 Then that function is called before exposing the module as an output.
-This allows modules to refer to the flake where it is defined, while the module arguments
-`flake`, `inputs` and `perSystem` refer to the flake where the module is consumed. Those can
+This allows modules to refer to the flake where it is defined, while the module arguments refer to the flake where the module is consumed. Those can
 be but do not need to be the same flake.
 
 ### `package.nix`, `formatter.nix`, `packages/<pname>(.nix|/default.nix)`
