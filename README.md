@@ -45,7 +45,7 @@ and more!
 
 ## Documentation
 
-* [Getting started](docs/getting-started.md).
+* [Getting started](docs/getting-started.md)
 * [Configuring blueprint](docs/configuration.md)
 * [Folder structure mapping](docs/folder-structure.md)
 
