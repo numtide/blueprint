@@ -34,7 +34,7 @@ Support for:
 
 * devshell.nix for your developer env.
 * NixOS
-* Nix-darin
+* nix-darwin
 * home-manager
 * nix-unit
 * default RFC166 nix formatter with `nix fmt`
