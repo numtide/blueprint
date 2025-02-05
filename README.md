@@ -4,7 +4,7 @@
 
 <img src="docs/blueprint.svg" height="150"/>
 
-**Nix without the glue code**
+**Standard folder structure for Nix projects**
 
 *A <a href="https://numtide.com/">numtide</a> project.*
 
@@ -15,57 +15,62 @@
 
 </div>
 
-Blueprint replaces Nix glue code with a regular folder structure. Focus on deploying your infrastructure / package sets instead of reinventing the wheel.
+blueprint is an opinionated library that maps a standard folder structure to
+flake outputs. It makes common use cases easy both for the author and
+consumers.
 
-The ambition is to handle all the workflows to reduce the cost of self-hosting infrastructure (we're not quite there yet).
+Eg:
 
-## Getting started
+| path | flake output |
+|-------|------|
+| devshells/ | `devShells.*` |
+| hosts/ | `nixosConfiguration.*` and `darwinConfigurations.*` ... |
+| modules/ | `nixosModules.*` and `darwinModules.*` ... |
+| packages/ | `packages.*` |
 
-Jump to [getting started](docs/getting-started.md).
+## Features
+
+Support for:
+
+* devshell.nix for your developer env.
+* NixOS
+* nix-darwin
+* home-manager
+* nix-unit
+* default RFC166 nix formatter with `nix fmt`
+* supports overridable systems with [nix-systems](https://github.com/nix-systems).
+* automatic flake checks from packages, devshells and NixOS configurations.
+
+and more!
+
+## Documentation
+
+* [Getting started](docs/getting-started.md)
+* [Configuring blueprint](docs/configuration.md)
+* [Folder structure mapping](docs/folder-structure.md)
 
 ## Rationale
 
 Nix is just a tool. It should help you, and stay out of the way. But because
-it's so flexible, everybody goes trough a 3 month period where they figure out
-how to structure their home repo. `flake.nix` files all over the internet
-become fatter and fatter with more glue code.
+it's so flexible, everybody goes through a long period where they figure out
+how to structure their repo. `flake.nix` files become noisy with boilerplate.
 
 By making a few opinionated choices, we're able to cut 99% of the glue code
-you would find in most repos. A bit like Ruby on Rails did for web frameworks,
-we do it for Nix packages. We map folder and files to flake outputs.
+you would find in most repos. A bit like Ruby on Rails or NextJS did for web
+frameworks, we do it for Nix packages. We map folder and files to flake
+outputs.
 
 In some ways, this is the spiritual successor to `flake-utils`, my first
 attempt at making flakes easier to use.
 
-What it's good for:
-
-* Home and SME configurations
-* Package sets
-
-What it's bad for:
-
-* Complicated setups (although we try to provide graceful fallback)
-* Developer environments (see <https://devenv.sh>)
+Blueprint isn't suitable for complex flakes but it does allow you to easily
+break out once your project becomes complicated beyond its capability.
 
 ## Design principles
 
 * User workflows come first.
 * KISS. We don't need complicated module systems with infinite recursions.
 * 1:1 mapping. Keep the mapping between attributes predictable.
-
-## Features
-
-* ./hosts for NixOS and Darwin configurations
-* ./packages for your packages.
-* ./lib for your libraries.
-* ./templates for your flake templates.
-* ./modules for common, nixos and darwin modules.
-* ./devshell.nix for your developer env.
-* default RFC166 nix formatter with `nix fmt`
-* supports overridable systems with [nix-systems](https://github.com/nix-systems).
-* automatic flake checks from packages, devshells and NixOS configurations.
-
-and more!
 
 ## Related projects
 
