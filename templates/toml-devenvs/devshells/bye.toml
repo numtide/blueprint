@@ -1,0 +1,5 @@
+imports = [ "./hello.toml" ]
+
+[[commands]]
+name = "check"
+command = "bye $(hello)" 

@@ -34,7 +34,7 @@ Those take the following arguments:
 
 ## Mapping
 
-### `devshell.nix`, `devshells/<pname>(.nix|/default.nix)`
+### `devshell.nix`, `devshells/<pname>(.nix|/default.nix)`, `devshell.toml`, `devshells/<pname>.toml`
 
 Contains the developer shell if specified.
 
@@ -47,9 +47,22 @@ Flake outputs:
 * `devShells.<system>.<pname>`
 * `checks.<system>.devshell-<pname>`
 
-#### Devshell example
+Developer shells can be defined in two ways: `.nix` files or `.toml` files.
+
+Shells with `.nix` syntax take preference if present.
+
+#### Nix devshells
+
+`nix` files are expected to evaluate into a shell derivation, normally the result of calling `mkShell`.
+
+There might be many different `mkShell` implementations, like the one present in `nixpkgs` or the one
+from `numtide/devshell`, and perhaps others. The one you choose depends on the features you might want
+to use in your environment, like service management, modularity, command menu, etc.
+
 
 ```nix
+# devshell.nix
+# Using mkShell from nixpkgs
 { pkgs, perSystem, ... }:
 pkgs.mkShell {
   packages = [
@@ -58,6 +71,58 @@ pkgs.mkShell {
   ];
 }
 ```
+
+```nix
+# devshell.nix
+# Using mkShell from numtide/devshell
+# You are expected to add inputs.devshell in your flake.
+{ pkgs, perSystem, ... }:
+perSystem.devshell.mkShell {
+
+  imports = [
+    # You might want to import other reusable modules
+    (perSystem.devshell.importTOML ./devshell.toml)
+  ];
+
+  env = [
+    # Add bin/ to the beginning of PATH
+    { name = "PATH"; prefix = "bin"; }
+  ];
+
+  # terraform will be present in the environment menu.
+  commands = [ { package = pkgs.terraform; } ];
+}
+```
+
+#### TOML devshells
+
+`toml` shells are loaded with [devshell](https://numtide.github.io/devshell) but you are required to add
+`inputs.devshell` to your flake.
+
+```toml
+# devshell.toml
+
+# see https://numtide.github.io/devshell/extending.html
+imports = [ "./modules/common.toml" ]
+
+[[commands]]
+package = "dbmate"
+
+[devshell]
+packages = ["sops"]
+
+[[env]]
+name = "DB_PASS"
+eval = "$(sops --config secrets/sops.yaml --decrypt secrets/db_pass)"
+
+[serviceGroups.database]
+description = "Runs a database in the backgroup"
+[serviceGroups.database.services.postgres]
+command = "postgres"
+[serviceGroups.database.services.memcached]
+command = "memcached"
+```
+
 
 ### `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
 
