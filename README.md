@@ -36,6 +36,7 @@ Support for:
 * NixOS
 * nix-darwin
 * home-manager
+* system-manager
 * nix-unit
 * default RFC166 nix formatter with `nix fmt`
 * supports overridable systems with [nix-systems](https://github.com/nix-systems).
