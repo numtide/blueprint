@@ -65,7 +65,7 @@ let
     let
       entries = builtins.readDir path;
 
-      # Get paths to nix files, where the name is the basename of the file without the .nix extension
+      # Get paths to toml files, where the name is the basename of the file without the .toml extension
       nixPaths = builtins.removeAttrs (lib.mapAttrs' (
         name: type:
         let
