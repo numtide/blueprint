@@ -1,0 +1,16 @@
+# This is a numtide/devshell TOML file.
+# See the schema: https://numtide.github.io/devshell/modules_schema.html
+
+# NOTE: This TOML file can also import other TOML files and extra nix-modules. 
+# See: https://numtide.github.io/devshell/extending.html
+#
+# However it would be not possible to import ./devshells/hello.nix since
+# it is not a module, but a devshell itself (a derivation result of mkShell)
+#
+imports = [ "./devshells/cowsay.toml", "./devshells/lolcat.toml", "./devshells/modules/bye.nix" ]
+
+
+[[commands]]
+name = "goodbye-cruel-world"
+command = "cowsay $(bye Cruel World) | lolcat"
+help = "Thanks for all the fish"
