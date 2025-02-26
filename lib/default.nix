@@ -59,6 +59,29 @@ let
   # Imports the path and pass the `args` to it if it exists, otherwise, return an empty attrset.
   tryImport = path: args: optionalPathAttrs path (path: import path args);
 
+  # Maps all the toml files in a directory to name -> path.
+  importTomlFilesAt =
+    path: fn:
+    let
+      entries = builtins.readDir path;
+
+      # Get paths to toml files, where the name is the basename of the file without the .toml extension
+      nixPaths = builtins.removeAttrs (lib.mapAttrs' (
+        name: type:
+        let
+          nixName = builtins.match "(.*)\\.toml" name;
+        in
+        {
+          name = if type == "directory" || nixName == null then "__junk" else (builtins.head nixName);
+          value = {
+            path = path + "/${name}";
+            type = type;
+          };
+        }
+      ) entries) [ "__junk" ];
+    in
+    lib.optionalAttrs (builtins.pathExists path) (fn nixPaths);
+
   # Maps all the nix files and folders in a directory to name -> path.
   importDir =
     path: fn:
@@ -151,6 +174,20 @@ let
       home-manager =
         inputs.home-manager
           or (throw ''home configurations require Home Manager. To fix this, add `inputs.home-manager.url = "github:nix-community/home-manager";` to your flake'');
+
+      devshellFromTOML =
+        perSystem: path:
+        let
+          devshell =
+            perSystem.devshell
+              or (throw ''Loading TOML devshells requires `inputs.devshell.url = "github:numtide/devshell";` in your flake'');
+        in
+        devshell.mkShell {
+          _module.args = {
+            inherit perSystem;
+          }; # so that devshell modules can access self exported packages.
+          imports = [ (devshell.importTOML path) ];
+        };
 
       # Sets up declared users without any user intervention, and sets the
       # options that most people would set anyway. The module is only returned
@@ -442,25 +479,80 @@ let
       __functor = x: inputs.self.lib.__functor x;
 
       devShells =
-        (optionalPathAttrs (src + "/devshells") (
-          path:
-          importDir path (
-            entries:
-            eachSystem (
-              { newScope, ... }:
-              lib.mapAttrs (pname: { path, type }: newScope { inherit pname; } path { }) entries
+        let
+          namedNix = (
+            optionalPathAttrs (src + "/devshells") (
+              path:
+              (importDir path (
+                entries:
+                eachSystem (
+                  { newScope, ... }:
+                  lib.mapAttrs (pname: { path, type }: newScope { inherit pname; } path { }) (
+                    lib.filterAttrs (
+                      _name:
+                      { path, type }:
+                      type == "regular" || (type == "directory" && lib.pathExists "${path}/default.nix")
+                    ) entries
+                  )
+                )
+              ))
             )
-          )
-        ))
-        // (optionalPathAttrs (src + "/devshell.nix") (
-          path:
-          eachSystem (
-            { newScope, ... }:
-            {
-              default = newScope { pname = "default"; } path { };
-            }
-          )
-        ));
+          );
+
+          namedToml = (
+            optionalPathAttrs (src + "/devshells") (
+              path:
+              (importTomlFilesAt path (
+                entries:
+                eachSystem (
+                  { newScope, perSystem, ... }:
+                  lib.mapAttrs (
+                    pname: { path, type }: newScope { inherit pname; } (_: devshellFromTOML perSystem path) { }
+                  ) entries
+                )
+              ))
+            )
+          );
+
+          defaultNix = (
+            optionalPathAttrs (src + "/devshell.nix") (
+              path:
+              eachSystem (
+                { newScope, ... }:
+                {
+                  default = newScope { pname = "default"; } path { };
+                }
+              )
+            )
+          );
+
+          defaultToml = (
+            optionalPathAttrs (src + "/devshell.toml") (
+              path:
+              eachSystem (
+                { newScope, perSystem, ... }:
+                {
+                  default = newScope { pname = "default"; } (_: devshellFromTOML perSystem path) { };
+                }
+              )
+            )
+          );
+
+          merge =
+            prev: item:
+            let
+              systems = lib.attrNames (prev // item);
+              mergeSystem = system: { ${system} = (prev.${system} or { }) // (item.${system} or { }); };
+              mergedSystems = builtins.map mergeSystem systems;
+            in
+            lib.mergeAttrsList mergedSystems;
+        in
+        lib.foldl merge { } [
+          namedToml
+          namedNix
+          defaultToml
+          defaultNix
+        ];
 
       packages =
         lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
