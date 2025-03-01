@@ -181,10 +181,6 @@ in rec {
         self = throw "self was renamed to flake";
       };
 
-      hmSpecialArgs = specialArgs // {
-        users = homesGeneric;
-      };
-
       inherit
         (mkEachSystem {
           inherit
