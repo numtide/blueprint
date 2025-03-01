@@ -128,10 +128,6 @@ let
         self = throw "self was renamed to flake";
       };
 
-      hmSpecialArgs = specialArgs // {
-        users = homesGeneric;
-      };
-
       inherit
         (mkEachSystem {
           inherit
@@ -169,7 +165,7 @@ let
             {
               imports = [ homeManagerModule ];
               home-manager.sharedModules = [ perSystemModule ];
-              home-manager.extraSpecialArgs = hmSpecialArgs;
+              home-manager.extraSpecialArgs = specialArgs;
               home-manager.users = homesNested.${hostname};
               home-manager.useGlobalPkgs = lib.mkDefault true;
               home-manager.useUserPackages = lib.mkDefault true;
@@ -244,7 +240,7 @@ let
             }:
             home-manager.lib.homeManagerConfiguration {
               inherit pkgs;
-              extraSpecialArgs = hmSpecialArgs;
+              extraSpecialArgs = specialArgs;
               modules = [
                 perSystemModule
                 modulePath
