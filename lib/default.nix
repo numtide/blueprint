@@ -165,9 +165,7 @@ let
             {
               imports = [ homeManagerModule ];
               home-manager.sharedModules = [ perSystemModule ];
-              home-manager.extraSpecialArgs = specialArgs // {
-                hostConfig = config;
-              };
+              home-manager.extraSpecialArgs = specialArgs;
               home-manager.users = homesNested.${hostname};
               home-manager.useGlobalPkgs = lib.mkDefault true;
               home-manager.useUserPackages = lib.mkDefault true;
