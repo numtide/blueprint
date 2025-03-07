@@ -201,6 +201,7 @@ Additional values passed:
 * `flake` maps to `inputs.self`.
 * `perSystem`: contains the packages of all the inputs, filtered per system.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+* `hostConfig`: the host nixos/nix-darwin configuration.
 
 > The simplest way to have a common/shared user configuration between multiple systems is to create a
 > module at `modules/home/<name>.nix` ([docs](#modulestypenamenamenix)), and import that module

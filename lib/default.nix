@@ -161,11 +161,13 @@ let
         hostname: homeManagerModule:
         let
           module =
-            { perSystem, ... }:
+            { perSystem, config, ... }:
             {
               imports = [ homeManagerModule ];
               home-manager.sharedModules = [ perSystemModule ];
-              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.extraSpecialArgs = specialArgs // {
+                hostConfig = config;
+              };
               home-manager.users = homesNested.${hostname};
               home-manager.useGlobalPkgs = lib.mkDefault true;
               home-manager.useUserPackages = lib.mkDefault true;
