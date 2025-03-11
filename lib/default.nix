@@ -439,260 +439,260 @@ let
         );
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
-    {
-      formatter = eachSystem (
-        { pkgs, perSystem, ... }:
-        perSystem.self.formatter or (pkgs.writeShellApplication {
-          name = "nixfmt-rfc-style";
+    lib.mkMerge [
+      (lib.mkIf (modules ? nixos) { nixosModules = modules.nixos or { }; })
+      (lib.mkIf (modules ? home) { homeModules = modules.home or { }; })
+      (lib.mkIf (modules ? darwin) { darwinModules = modules.darwin or { }; })
+      {
+        formatter = eachSystem (
+          { pkgs, perSystem, ... }:
+          perSystem.self.formatter or (pkgs.writeShellApplication {
+            name = "nixfmt-rfc-style";
 
-          runtimeInputs = [
-            pkgs.findutils
-            pkgs.gnugrep
-            pkgs.nixfmt-rfc-style
-          ];
+            runtimeInputs = [
+              pkgs.findutils
+              pkgs.gnugrep
+              pkgs.nixfmt-rfc-style
+            ];
 
-          text = ''
-            set -euo pipefail
+            text = ''
+              set -euo pipefail
 
-            # If no arguments are passed, default to formatting the whole project
-            # If git it not available, fallback on current directory.
-            if [[ $# = 0 ]]; then
-              prj_root=$(git rev-parse --show-toplevel 2>/dev/null || echo .)
-              set -- "$prj_root"
-            fi
+              # If no arguments are passed, default to formatting the whole project
+              # If git it not available, fallback on current directory.
+              if [[ $# = 0 ]]; then
+                prj_root=$(git rev-parse --show-toplevel 2>/dev/null || echo .)
+                set -- "$prj_root"
+              fi
 
-            # Not a git repo, or git is not installed. Fallback
-            if ! git rev-parse --is-inside-work-tree; then
-              exec nixfmt "$@"
-            fi
+              # Not a git repo, or git is not installed. Fallback
+              if ! git rev-parse --is-inside-work-tree; then
+                exec nixfmt "$@"
+              fi
 
-            # Use git to traverse since nixfmt doesn't have good traversal
-            git ls-files "$@" | grep '\.nix$' | xargs --no-run-if-empty nixfmt
-          '';
-        })
-      );
-
-      lib = tryImport (src + "/lib") specialArgs;
-
-      # expose the functor to the top-level
-      # FIXME: only if it exists
-      __functor = x: inputs.self.lib.__functor x;
-
-      devShells =
-        let
-          namedNix = (
-            optionalPathAttrs (src + "/devshells") (
-              path:
-              (importDir path (
-                entries:
-                eachSystem (
-                  { newScope, ... }:
-                  lib.mapAttrs (pname: { path, type }: newScope { inherit pname; } path { }) (
-                    lib.filterAttrs (
-                      _name:
-                      { path, type }:
-                      type == "regular" || (type == "directory" && lib.pathExists "${path}/default.nix")
-                    ) entries
-                  )
-                )
-              ))
-            )
-          );
-
-          namedToml = (
-            optionalPathAttrs (src + "/devshells") (
-              path:
-              (importTomlFilesAt path (
-                entries:
-                eachSystem (
-                  { newScope, perSystem, ... }:
-                  lib.mapAttrs (
-                    pname: { path, type }: newScope { inherit pname; } (_: devshellFromTOML perSystem path) { }
-                  ) entries
-                )
-              ))
-            )
-          );
-
-          defaultNix = (
-            optionalPathAttrs (src + "/devshell.nix") (
-              path:
-              eachSystem (
-                { newScope, ... }:
-                {
-                  default = newScope { pname = "default"; } path { };
-                }
-              )
-            )
-          );
-
-          defaultToml = (
-            optionalPathAttrs (src + "/devshell.toml") (
-              path:
-              eachSystem (
-                { newScope, perSystem, ... }:
-                {
-                  default = newScope { pname = "default"; } (_: devshellFromTOML perSystem path) { };
-                }
-              )
-            )
-          );
-
-          merge =
-            prev: item:
-            let
-              systems = lib.attrNames (prev // item);
-              mergeSystem = system: { ${system} = (prev.${system} or { }) // (item.${system} or { }); };
-              mergedSystems = builtins.map mergeSystem systems;
-            in
-            lib.mergeAttrsList mergedSystems;
-        in
-        lib.foldl merge { } [
-          namedToml
-          namedNix
-          defaultToml
-          defaultNix
-        ];
-
-      packages =
-        lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
-          (
-            let
-              entries =
-                (optionalPathAttrs (src + "/packages") (path: importDir path lib.id))
-                // (optionalPathAttrs (src + "/package.nix") (path: {
-                  default = {
-                    inherit path;
-                  };
-                }))
-                // (optionalPathAttrs (src + "/formatter.nix") (path: {
-                  formatter = {
-                    inherit path;
-                  };
-                }));
-            in
-            eachSystem (
-              { newScope, ... }: lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries
-            )
-          );
-
-      # Defining homeConfigurations under legacyPackages allows the home-manager CLI
-      # to automatically detect the right output for the current system without
-      # either manually defining the pkgs set (requires explicit system) or breaking
-      # nix3 CLI output (`packages` output expects flat attrset)
-      # FIXME: Find another way to make this work without introducing legacyPackages.
-      #        May involve changing upstream home-manager.
-      legacyPackages = lib.optionalAttrs (homesNested != { }) standaloneHomeConfigurations;
-
-      darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
-      nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
-      systemConfigs = lib.mapAttrs (_: x: x.value) (hostsByCategory.systemConfigs or { });
-
-      inherit modules;
-
-      darwinModules = modules.darwin or { };
-      homeModules = modules.home or { };
-      # TODO: how to extract NixOS tests?
-      nixosModules = modules.nixos or { };
-
-      templates = importDir (src + "/templates") (
-        entries:
-        lib.mapAttrs (
-          name:
-          { path, type }:
-          {
-            path = path;
-            description =
-              if builtins.pathExists (path + "/flake.nix") then
-                (import (path + "/flake.nix")).description or name
-              else
-                name;
-          }
-        ) entries
-      );
-
-      checks = eachSystem (
-        { system, pkgs, ... }:
-        lib.mergeAttrsList (
-          [
-            # add all the supported packages, and their passthru.tests to checks
-            (withPrefix "pkgs-" (
-              lib.concatMapAttrs (
-                pname: package:
-                {
-                  ${pname} = package;
-                }
-                # also add the passthru.tests to the checks
-                // (lib.mapAttrs' (tname: test: {
-                  name = "${pname}-${tname}";
-                  value = test;
-                }) (filterPlatforms system (package.passthru.tests or { })))
-              ) (filterPlatforms system (inputs.self.packages.${system} or { }))
-            ))
-            # build all the devshells
-            (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
-            # add nixos system closures to checks
-            (withPrefix "nixos-" (
-              lib.mapAttrs (_: x: x.config.system.build.toplevel) (
-                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
-              )
-            ))
-            # add darwin system closures to checks
-            (withPrefix "darwin-" (
-              lib.mapAttrs (_: x: x.system) (
-                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
-              )
-            ))
-            # add system-manager closures to checks
-            (withPrefix "system-" (
-              lib.mapAttrs (_: x: x) (
-                lib.filterAttrs (_: x: x.system == system) (inputs.self.systemConfigs or { })
-              )
-            ))
-            # load checks from the /checks folder. Those take precedence over the others.
-            (filterPlatforms system (
-              optionalPathAttrs (src + "/checks") (
-                path:
-                let
-                  importChecksFn = lib.mapAttrs (
-                    pname:
-                    { type, path }:
-                    import path {
-                      inherit
-                        pname
-                        flake
-                        inputs
-                        system
-                        pkgs
-                        ;
-                    }
-                  );
-                in
-
-                (importDir path importChecksFn)
-              )
-            ))
-          ]
-          ++ (lib.optional (inputs.self.lib.tests or { } != { }) {
-            lib-tests = pkgs.runCommandLocal "lib-tests" { nativeBuildInputs = [ pkgs.nix-unit ]; } ''
-              export HOME="$(realpath .)"
-              export NIX_CONFIG='
-              extra-experimental-features = nix-command flakes
-              flake-registry = ""
-              '
-
-              nix-unit --flake ${flake}#lib.tests ${
-                toString (
-                  lib.mapAttrsToList (k: v: "--override-input ${k} ${v}") (builtins.removeAttrs inputs [ "self" ])
-                )
-              }
-
-              touch $out
+              # Use git to traverse since nixfmt doesn't have good traversal
+              git ls-files "$@" | grep '\.nix$' | xargs --no-run-if-empty nixfmt
             '';
           })
-        )
-      );
-    };
+        );
+
+        lib = tryImport (src + "/lib") specialArgs;
+
+        # expose the functor to the top-level
+        # FIXME: only if it exists
+        __functor = x: inputs.self.lib.__functor x;
+
+        devShells =
+          let
+            namedNix = (
+              optionalPathAttrs (src + "/devshells") (
+                path:
+                (importDir path (
+                  entries:
+                  eachSystem (
+                    { newScope, ... }:
+                    lib.mapAttrs (pname: { path, type }: newScope { inherit pname; } path { }) (
+                      lib.filterAttrs (
+                        _name:
+                        { path, type }:
+                        type == "regular" || (type == "directory" && lib.pathExists "${path}/default.nix")
+                      ) entries
+                    )
+                  )
+                ))
+              )
+            );
+
+            namedToml = (
+              optionalPathAttrs (src + "/devshells") (
+                path:
+                (importTomlFilesAt path (
+                  entries:
+                  eachSystem (
+                    { newScope, perSystem, ... }:
+                    lib.mapAttrs (
+                      pname: { path, type }: newScope { inherit pname; } (_: devshellFromTOML perSystem path) { }
+                    ) entries
+                  )
+                ))
+              )
+            );
+
+            defaultNix = (
+              optionalPathAttrs (src + "/devshell.nix") (
+                path:
+                eachSystem (
+                  { newScope, ... }:
+                  {
+                    default = newScope { pname = "default"; } path { };
+                  }
+                )
+              )
+            );
+
+            defaultToml = (
+              optionalPathAttrs (src + "/devshell.toml") (
+                path:
+                eachSystem (
+                  { newScope, perSystem, ... }:
+                  {
+                    default = newScope { pname = "default"; } (_: devshellFromTOML perSystem path) { };
+                  }
+                )
+              )
+            );
+
+            merge =
+              prev: item:
+              let
+                systems = lib.attrNames (prev // item);
+                mergeSystem = system: { ${system} = (prev.${system} or { }) // (item.${system} or { }); };
+                mergedSystems = builtins.map mergeSystem systems;
+              in
+              lib.mergeAttrsList mergedSystems;
+          in
+          lib.foldl merge { } [
+            namedToml
+            namedNix
+            defaultToml
+            defaultNix
+          ];
+
+        packages =
+          lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
+            (
+              let
+                entries =
+                  (optionalPathAttrs (src + "/packages") (path: importDir path lib.id))
+                  // (optionalPathAttrs (src + "/package.nix") (path: {
+                    default = {
+                      inherit path;
+                    };
+                  }))
+                  // (optionalPathAttrs (src + "/formatter.nix") (path: {
+                    formatter = {
+                      inherit path;
+                    };
+                  }));
+              in
+              eachSystem (
+                { newScope, ... }: lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries
+              )
+            );
+
+        # Defining homeConfigurations under legacyPackages allows the home-manager CLI
+        # to automatically detect the right output for the current system without
+        # either manually defining the pkgs set (requires explicit system) or breaking
+        # nix3 CLI output (`packages` output expects flat attrset)
+        # FIXME: Find another way to make this work without introducing legacyPackages.
+        #        May involve changing upstream home-manager.
+        legacyPackages = lib.optionalAttrs (homesNested != { }) standaloneHomeConfigurations;
+
+        darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
+        nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
+        systemConfigs = lib.mapAttrs (_: x: x.value) (hostsByCategory.systemConfigs or { });
+
+        inherit modules;
+
+        templates = importDir (src + "/templates") (
+          entries:
+          lib.mapAttrs (
+            name:
+            { path, type }:
+            {
+              path = path;
+              description =
+                if builtins.pathExists (path + "/flake.nix") then
+                  (import (path + "/flake.nix")).description or name
+                else
+                  name;
+            }
+          ) entries
+        );
+
+        checks = eachSystem (
+          { system, pkgs, ... }:
+          lib.mergeAttrsList (
+            [
+              # add all the supported packages, and their passthru.tests to checks
+              (withPrefix "pkgs-" (
+                lib.concatMapAttrs (
+                  pname: package:
+                  {
+                    ${pname} = package;
+                  }
+                  # also add the passthru.tests to the checks
+                  // (lib.mapAttrs' (tname: test: {
+                    name = "${pname}-${tname}";
+                    value = test;
+                  }) (filterPlatforms system (package.passthru.tests or { })))
+                ) (filterPlatforms system (inputs.self.packages.${system} or { }))
+              ))
+              # build all the devshells
+              (withPrefix "devshell-" (inputs.self.devShells.${system} or { }))
+              # add nixos system closures to checks
+              (withPrefix "nixos-" (
+                lib.mapAttrs (_: x: x.config.system.build.toplevel) (
+                  lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
+                )
+              ))
+              # add darwin system closures to checks
+              (withPrefix "darwin-" (
+                lib.mapAttrs (_: x: x.system) (
+                  lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
+                )
+              ))
+              # add system-manager closures to checks
+              (withPrefix "system-" (
+                lib.mapAttrs (_: x: x) (
+                  lib.filterAttrs (_: x: x.system == system) (inputs.self.systemConfigs or { })
+                )
+              ))
+              # load checks from the /checks folder. Those take precedence over the others.
+              (filterPlatforms system (
+                optionalPathAttrs (src + "/checks") (
+                  path:
+                  let
+                    importChecksFn = lib.mapAttrs (
+                      pname:
+                      { type, path }:
+                      import path {
+                        inherit
+                          pname
+                          flake
+                          inputs
+                          system
+                          pkgs
+                          ;
+                      }
+                    );
+                  in
+
+                  (importDir path importChecksFn)
+                )
+              ))
+            ]
+            ++ (lib.optional (inputs.self.lib.tests or { } != { }) {
+              lib-tests = pkgs.runCommandLocal "lib-tests" { nativeBuildInputs = [ pkgs.nix-unit ]; } ''
+                export HOME="$(realpath .)"
+                export NIX_CONFIG='
+                extra-experimental-features = nix-command flakes
+                flake-registry = ""
+                '
+
+                nix-unit --flake ${flake}#lib.tests ${
+                  toString (
+                    lib.mapAttrsToList (k: v: "--override-input ${k} ${v}") (builtins.removeAttrs inputs [ "self" ])
+                  )
+                }
+
+                touch $out
+              '';
+            })
+          )
+        );
+      }
+    ];
 
   # Create a new flake blueprint
   mkBlueprint =
