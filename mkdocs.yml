@@ -1,6 +1,6 @@
 # Project info
 site_name: Blueprint
-site_url: https://treefmt.com
+site_url: https://numtide.github.io/blueprint
 site_description: >-
     An opinionated library that maps a standard folder structure to flake outputs. It streamlines common use cases for both developers and users alike.
 
