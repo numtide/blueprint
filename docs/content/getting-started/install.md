@@ -138,6 +138,22 @@ Check out:
 * Guides
 * Contributing
 
+# Adding folders
+
+Next, we'll add some folders into your project to give you an idea of how the
+folder system works.
+
+Remember that folders are read automatically. That way, you can drop in 
+place pre-built flakes. For example, on another project, you might have
+built a flake that configures mysql. In that project you placed it in
+a folder called packages. You can then simply create a folder in your new
+project also called packages, and drop the mysql file in there, and you're
+good to go. No messing around with giant monolithic flake.nix file.
+
+So let's do exactly that. Except instead of creating a nix for MySQL,
+we'll just create 
+
+
 # (Optional) Configuring direnv
 
 Included in the initial files created by Blueprint is a filed called .envrc. This file contains code to configure direnv, which allows you to enter a devshell simply by switching to the folder containing your project. That means you don't need to type `nix develop` after entering the folder. Then when you move up and out of the folder, you'll automatically exit the environment.
