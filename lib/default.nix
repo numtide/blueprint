@@ -563,17 +563,7 @@ let
                 path:
                 let
                   importChecksFn = lib.mapAttrs (
-                    pname:
-                    { type, path }:
-                    import path {
-                      inherit
-                        pname
-                        flake
-                        inputs
-                        system
-                        pkgs
-                        ;
-                    }
+                    pname: { type, path }: import path (systemArgs.${system} // { inherit pname; })
                   );
                 in
 
