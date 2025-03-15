@@ -467,7 +467,7 @@ let
             fi
 
             # Use git to traverse since nixfmt doesn't have good traversal
-            git ls-files "$@" | grep '\.nix$' | xargs --no-run-if-empty nixfmt
+            git ls-files -z "$@" | grep --null '\.nix$' | xargs --null --no-run-if-empty nixfmt
           '';
         })
       );
