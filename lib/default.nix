@@ -165,10 +165,30 @@ let
         ;
 
       # Adds the perSystem argument to the NixOS and Darwin modules
+      perSystemArgsModule = system: {
+        _module.args.perSystem = systemArgs.${system}.perSystem;
+      };
+
+      # Shares pkgs with flake's, to avoid multiple nixpkgs reevaluations
       perSystemModule =
-        { pkgs, ... }:
+        { config, lib, ... }:
         {
-          _module.args.perSystem = systemArgs.${pkgs.system}.perSystem;
+          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform.system) ];
+          nixpkgs.pkgs = lib.mkDefault systemArgs.${config.nixpkgs.hostPlatform.system}.pkgs;
+        };
+
+      # Same thing for home-manager
+      perSystemHMModule =
+        { osConfig, ... }:
+        {
+          imports = [ (perSystemArgsModule osConfig.nixpkgs.hostPlatform.system) ];
+        };
+
+      # Same thing for system manager
+      perSystemSMModule =
+        { config, lib, ... }:
+        {
+          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform) ];
         };
 
       home-manager =
@@ -201,7 +221,7 @@ let
             { perSystem, config, ... }:
             {
               imports = [ homeManagerModule ];
-              home-manager.sharedModules = [ perSystemModule ];
+              home-manager.sharedModules = [ perSystemHMModule ];
               home-manager.extraSpecialArgs = specialArgs;
               home-manager.users = homesNested.${hostname};
               home-manager.useGlobalPkgs = lib.mkDefault true;
@@ -352,7 +372,7 @@ let
               class = "system-manager";
               value = system-manager.lib.makeSystemConfig {
                 modules = [
-                  perSystemModule
+                  perSystemSMModule
                   path
                 ];
                 extraSpecialArgs = specialArgs;
