@@ -338,6 +338,12 @@ let
               modules = [
                 perSystemModule
                 path
+                (
+                  { lib, ... }:
+                  {
+                    networking.hostName = lib.mkDefault hostname;
+                  }
+                )
               ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
               inherit specialArgs;
             };
