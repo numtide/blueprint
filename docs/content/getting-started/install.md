@@ -234,7 +234,14 @@ Next, we need a file that configures MkDocs called mkdocs.yml. In the root folde
 site_name: AwesomeProject
 ```
 
-Then, from your root folder, let's run the code. Type:
+Now let's build the docs using the mkdocs app. We'll build a static site. From your root folder, type:
+
+```
+nix build .#docs
+```
+
+You'll see a `results` folder appear. This contains the output from the mkdocs, which is the built website.
+If you want to run the built-in mkdocs server to try out your site, type:
 
 ```
 nix develop .#docs
@@ -242,7 +249,8 @@ nix develop .#docs
 
 Notice by calling nix develop, we're entering a development shell. But that happens
 only after we run the derivation. The derivation will compile our documents into
-a static site and make the mkdocs command available to us while in the shell.
+a static site again (if necessary) and make the mkdocs command available to us while
+in the shell.
 
 Open up a browser and head to `http://127.0.0.1:8000/` and you should see the
 documentation open with a header "Welcome to my amazing app!" and so on.
