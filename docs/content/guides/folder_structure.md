@@ -57,6 +57,8 @@ pkgs.mkShell {
 }
 ```
 
+[TODO/HOLD -- I'm creating shells here and putting them in the packages folder; they should be in the devshells folder.]
+
 This code will create a devshell that includes node.js and the IDE called Geany. It also 
 sets the prompt to show the word `(backend)` as a reminder you're working in the bakcend. 
 You can use this devshell for backend development.
