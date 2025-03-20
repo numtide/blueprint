@@ -310,21 +310,21 @@ let
         let
           loadDefaultFn = { class, value }@inputs: inputs;
 
-          loadDefault = path: loadDefaultFn (import path { inherit flake inputs; });
+          loadDefault = name: path: loadDefaultFn (import path { inherit flake inputs name; });
 
-          loadNixOS = hostname: path: {
+          loadNixOS = name: path: {
             class = "nixos";
             value = inputs.nixpkgs.lib.nixosSystem {
               modules = [
                 perSystemModule
                 path
-              ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
-              inherit specialArgs;
+              ] ++ mkHomeUsersModule name home-manager.nixosModules.default;
+              specialArgs = specialArgs // { inherit name; };
             };
           };
 
           loadNixDarwin =
-            hostname: path:
+            name: path:
             let
               nix-darwin =
                 inputs.nix-darwin
@@ -336,13 +336,13 @@ let
                 modules = [
                   perSystemModule
                   path
-                ] ++ mkHomeUsersModule hostname home-manager.darwinModules.default;
-                inherit specialArgs;
+                ] ++ mkHomeUsersModule name home-manager.darwinModules.default;
+                specialArgs = specialArgs // { inherit name; };
               };
             };
 
           loadSystemManager =
-            _hostname: path:
+            name: path:
             let
               system-manager =
                 inputs.system-manager
@@ -355,7 +355,7 @@ let
                   perSystemModule
                   path
                 ];
-                extraSpecialArgs = specialArgs;
+                extraSpecialArgs = specialArgs // { inherit name; };
               };
             };
 
@@ -363,7 +363,7 @@ let
             name:
             { path, type }:
             if builtins.pathExists (path + "/default.nix") then
-              loadDefault (path + "/default.nix")
+              loadDefault name (path + "/default.nix")
             else if builtins.pathExists (path + "/configuration.nix") then
               loadNixOS name (path + "/configuration.nix")
             else if builtins.pathExists (path + "/darwin-configuration.nix") then
