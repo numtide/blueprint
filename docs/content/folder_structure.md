@@ -13,6 +13,20 @@ folder that in turn holds these folders.
 
 * hosts/*/users/ for Home Manager configurations.
 
+Nix runs on many different operating systems and architecture. When you create 
+a flake, you can define what systems it can produce outputs for.
+
+You can configure your project to work with different hosts, which are specific
+computers or systems.
+
+
+
+> **Note:** Whereas systems refer to operating systems running in conjunction
+with a specific architecture, a host refer to specific, single machine (virtual
+or physical) that runs Nix or NixOS.
+
+
+
 * lib/ for Nix functions.
 
 * modules/ for NixOS and other modules.
