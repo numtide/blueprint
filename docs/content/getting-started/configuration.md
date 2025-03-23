@@ -6,11 +6,27 @@ Those are available by changing the `flake.nix` output invocation with additiona
 
 ## prefix
 
-Set this if you want to load the blueprint from a directory within the repositiry other than the flake location.
+Set this if you want to load the blueprint from a directory within the repository other than the flake location.
 
 Default: "."
 
 Type: string.
+
+For example, add the following prefix line to your output invocation:
+
+```nix
+outputs = inputs:
+  inputs.blueprint {
+    inherit inputs;
+    prefix = "nix/";
+  };
+```
+
+Then, you can add a `nix` folder inside the same folder that holds your flake file, and place
+all your folders within this `nix` folder.
+
+> **Tip:** Although you can choose any folder you like, we recommend the name "nix" for your folder,
+as this is becoming the defacto standard.
 
 ## systems
 
@@ -39,7 +55,7 @@ Default: `inputs.nixpkgs.legacyPackages.<system>`.
 
 Type: attrset.
 
-Example:
+For example, the following sets the allowUnfree attribute of nixpkgs.config to true:
 
 ```nix
 {

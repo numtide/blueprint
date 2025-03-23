@@ -1,8 +1,8 @@
- # Using Templates
+# Using Templates
 
- Blueprint comes with several templates to help you get started with your project.
+Blueprint comes with several templates to help you get started with your project.
 
- > Note: We are continuing to add additional templates. Please check back periodically.
+> Note: We are continuing to add additional templates. Please check back periodically.
 
 To install from a template, specify the template name after the initial flake init 
 command, preceded by a hash symbol. For example, to use the template called system 
@@ -29,7 +29,7 @@ nix flake init -t github:numtide/blueprint#nixos-and-darwin-shared-homes
 ```
 
 This template is a bit of an example plus a template. You'll want to study all the
-files  carefully. It shows how you can define and reuse modules, in this case nixos
+files carefully. It shows how you can define and reuse modules, in this case nixos
 and home-manager.
 
 Look carefully at the folder structure; in this case we're using `hosts` and

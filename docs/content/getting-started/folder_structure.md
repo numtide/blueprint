@@ -5,13 +5,11 @@ Here's a rundown of the options for your folders.
 > **Tip:** We recommend using a prefix (usually nix) that specifies a root
 folder that in turn holds these folders.
 
-* checks/ for flake checks.
+## **checks/** for flake checks.
 
-* devshells/ for devshells.
+## **devshells/** for devshells.
 
-* hosts/ for machine configurations.
-
-* hosts/*/users/ for Home Manager configurations.
+## **hosts/** for machine configurations.
 
 Nix runs on many different operating systems and architecture. When you create 
 a flake, you can define what systems it can produce outputs for.
@@ -25,21 +23,23 @@ computers or systems.
 with a specific architecture, a host refer to specific, single machine (virtual
 or physical) that runs Nix or NixOS.
 
+## **hosts/*/users/** for Home Manager configurations.
 
 
-* lib/ for Nix functions.
 
-* modules/ for NixOS and other modules.
+## **lib/** for Nix functions.
 
-* packages/ for packages.
+## **modules/** for NixOS and other modules.
 
-* templates/ for flake templates.
+## **packages/** for packages.
 
-* devshell.nix for the default devshell
+## **templates/** for flake templates.
 
-* formatter.nix for the default formatter
+## **devshell.nix** for the default devshell
 
-* package.nix for the default package
+## **formatter.nix** for the default formatter
+
+## **package.nix** for the default package
 
 Because of the presence of Bluprint, nix files contained in these folders and their
 subfolders are immediately available.
