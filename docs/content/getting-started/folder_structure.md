@@ -6,6 +6,9 @@ Here's a rundown of the options for your folders, followed by detailed explanati
 
 ## High-level
 
+* `devshell.nix` for the default devshell
+* `formatter.nix` for the default formatter
+* `package.nix` for the default package
 * `checks/` for flake checks.
 * `devshells/` for devshells.
 * `hosts/` for machine configurations.
@@ -15,9 +18,6 @@ Here's a rundown of the options for your folders, followed by detailed explanati
 * `packages/` for packages.
 * `templates/` for flake templates.
 
-* `devshell.nix` for the default devshell
-* `formatter.nix` for the default formatter
-* `package.nix` for the default package
 
 ## File arguments
 
@@ -129,7 +129,7 @@ command = "postgres"
 command = "memcached"
 ```
 
-## **hosts/** for machine configurations.
+## `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
 
 Nix runs on many different operating systems and architecture. When you create 
 a flake, you can define what systems it can produce outputs for.
@@ -140,9 +140,6 @@ computers or systems.
 > **Note:** Whereas systems refer to operating systems running in conjunction
 with a specific architecture, a host refer to specific, single machine (virtual
 or physical) that runs Nix or NixOS.
-
-
-## `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
 
 Each folder contains either a NixOS or nix-darwin configuration:
 
