@@ -341,7 +341,11 @@ let
                 (
                   { lib, ... }:
                   {
-                    networking.hostName = lib.mkDefault hostname;
+                    options.blueprint.hostName = lib.mkOption {
+                      default = hostname;
+                      type = lib.types.str;
+                      readOnly = true;
+                    };
                   }
                 )
               ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
