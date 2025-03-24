@@ -126,7 +126,7 @@ command = "memcached"
 
 ### `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
 
-Each folder contains either a NixOS or nix-darwin configuration:
+Each folder contains either a NixOS, [nix-darwin](https://github.com/LnL7/nix-darwin) or [system-manager](https://github.com/numtide/system-manager) configuration:
 
 #### `configuration.nix`
 
@@ -138,6 +138,7 @@ Additional values passed:
 * `flake` maps to `inputs.self`.
 * `perSystem`: contains the packages of all the inputs, filtered per system.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+* `hostName` as per the hosts directory name.
 
 Flake outputs:
 
@@ -182,6 +183,7 @@ Additional values passed:
 * `flake` maps to `inputs.self`.
 * `perSystem`: contains the packages of all the inputs, filtered per system.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+* `hostName` as per the hosts directory name.
 
 Flake outputs:
 
@@ -207,6 +209,7 @@ Additional values passed:
 * `flake` maps to `inputs.self`.
 * `perSystem`: contains the packages of all the inputs, filtered per system.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+* `hostName` as per the hosts directory name.
 
 Flake outputs:
 
@@ -234,6 +237,7 @@ Additional values passed:
 
 * `inputs` maps to the current flake inputs.
 * `flake` maps to `inputs.self`.
+* `hostName` as per the hosts directory name.
 
 Expected return value:
 
