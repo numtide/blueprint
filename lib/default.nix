@@ -488,7 +488,7 @@ let
         })
       );
 
-      lib = tryImport (src + "/lib") specialArgs;
+      lib = tryImport (src + "/lib") (specialArgs // {inherit (inputs.nixpkgs) lib;});
 
       # expose the functor to the top-level
       # FIXME: only if it exists
