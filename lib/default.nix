@@ -226,6 +226,26 @@ let
         in
         lib.optional (builtins.hasAttr hostname homesNested) module;
 
+      homesGeneric =
+        let
+          getEntryPath =
+            _username: userEntry:
+            if builtins.pathExists (userEntry.path + "/home-configuration.nix") then
+              userEntry.path + "/home-configuration.nix"
+            else
+              # If we decide to add users/<username>.nix, it's as simple as
+              # testing `if userEntry.type == "regular"`
+              null;
+
+          mkUsers =
+            userEntries:
+            let
+              users = lib.mapAttrs getEntryPath userEntries;
+            in
+            lib.filterAttrs (_name: value: value != null) users;
+        in
+        importDir (src + "/users") mkUsers;
+
       # Attribute set mapping hostname (defined in hosts/) to a set of home
       # configurations (modules) for that host. If a host has no home
       # configuration, it will be omitted from the set. Likewise, if the user
@@ -311,13 +331,17 @@ let
         eachSystem (
           { pkgs, ... }:
           {
-            homeConfigurations = lib.mapAttrs (
-              _name: homeData:
-              mkHomeConfiguration {
-                inherit (homeData) modulePath username;
-                inherit pkgs;
-              }
-            ) homesFlat;
+            homeConfigurations =
+              lib.mapAttrs (
+                _name: homeData:
+                mkHomeConfiguration {
+                  inherit (homeData) modulePath username;
+                  inherit pkgs;
+                }
+              ) homesFlat
+              // lib.mapAttrs (
+                username: modulePath: mkHomeConfiguration { inherit pkgs username modulePath; }
+              ) homesGeneric;
           }
         );
 
@@ -598,7 +622,7 @@ let
       # nix3 CLI output (`packages` output expects flat attrset)
       # FIXME: Find another way to make this work without introducing legacyPackages.
       #        May involve changing upstream home-manager.
-      legacyPackages = lib.optionalAttrs (homesNested != { }) standaloneHomeConfigurations;
+      legacyPackages = standaloneHomeConfigurations;
 
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
