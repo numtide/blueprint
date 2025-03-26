@@ -270,12 +270,13 @@ let
               username,
               modulePath,
               pkgs,
+              system,
             }:
             home-manager.lib.homeManagerConfiguration {
               inherit pkgs;
               extraSpecialArgs = specialArgs;
               modules = [
-                perSystemModule
+                (perSystemArgsModule system)
                 modulePath
                 (
                   { config, ... }:
@@ -309,13 +310,13 @@ let
           ) homesNested;
         in
         eachSystem (
-          { pkgs, ... }:
+          { pkgs, system, ... }:
           {
             homeConfigurations = lib.mapAttrs (
               _name: homeData:
               mkHomeConfiguration {
                 inherit (homeData) modulePath username;
-                inherit pkgs;
+                inherit pkgs system;
               }
             ) homesFlat;
           }
