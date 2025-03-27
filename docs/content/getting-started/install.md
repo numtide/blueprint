@@ -60,7 +60,7 @@ When you run a nix command (such as `nix develop`), this flake.nix file is evalu
 * The devShell.nix file in the root of your project
 * A folder structure
 
-You create the folder structure based on the available list of folders (found here).
+You create the folder structure based on the available list of folders [found here](folder_structure.md).
 
 # A Sample Environment
 
@@ -266,7 +266,7 @@ folders (including Packages) for files and find them automatically, making them
 available to use.
 
 > **Tip:** If you want to see what folders are available, head over to our 
-[folder strutures](../guides/folder_structure.md) documentation.
+[folder strutures](folder_structure.md) documentation.
 
 
 # (Optional) Configuring direnv

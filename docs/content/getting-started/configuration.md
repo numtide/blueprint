@@ -1,8 +1,15 @@
 # Configuration
 
-In this section we describe the blueprint configuration options.
+In this section we describe the blueprint configuration options:
 
-Those are available by changing the `flake.nix` output invocation with additional parameters.
+* **prefix**: This lets you specify a directory to hold the folders other than the flake.nix location.
+* **systems**: Defines which systems the project should be used and deployed on.
+* **nixpkgs.config**: If set, Blueprint will create a new instance of nixpkgs for each systems.
+* **nixpkgs.overlays**: If set, blueprint will create a new instance of nixpkgs for each systems.
+
+These are available by changing the `flake.nix` output invocation with additional parameters.
+
+Below we provide more detail on each, along with examples.
 
 ## prefix
 

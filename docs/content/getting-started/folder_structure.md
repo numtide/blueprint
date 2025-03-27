@@ -34,7 +34,7 @@ Those take the following arguments:
 * `system`: the current system attribute.
 * `perSystem`: contains the packages of all the inputs, filtered per system.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
-* `pkgs`: and instance of nixpkgs, see [configuration](configuration.md) on how it's configured.
+* `pkgs`: an instance of nixpkgs, see [configuration](configuration.md) on how it's configured.
 
 
 ## **flake.nix** for the default flake
@@ -394,7 +394,7 @@ Flake outputs:
 
 Use this if you want your project to be initializable using `nix flake init`.
 
-This is what is used by blueprint in the [getting started](getting-started.md) section.
+This is what is used by blueprint in the [install](install.md) section.
 
 If no name is passed, it will look for the "default" folder.
 
