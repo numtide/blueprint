@@ -1,23 +1,39 @@
 # Configuration
 
-The flake.nix file offers a few configuration options:
+In this section we describe the blueprint configuration options:
 
 * **prefix**: This lets you specify a directory to hold the folders other than the flake.nix location.
 * **systems**: Defines which systems the project should be used and deployed on.
-* **nixpkgs.config**: If set, Blueprint will create a new instance of nixpkgs for each systems.
-* **nixpkgs.overlays**: If set, blueprint will create a new instance of nixpkgs for each systems.
+* **nixpkgs.config**: If set, Blueprint will create a new instance of nixpkgs for each system.
+* **nixpkgs.overlays**: If set, blueprint will create a new instance of nixpkgs for each system.
+
+These are available by changing the `flake.nix` output invocation with additional parameters.
 
 Below we provide more detail on each, along with examples.
 
-[TODO: More detail and each; meanwhile I've copied in the current configuration.md file]
-
 ## prefix
 
-Set this if you want to load the blueprint from a directory within the repositiry other than the flake location.
+Set this if you want to load the blueprint from a directory within the repository other than the flake location.
 
 Default: "."
 
 Type: string.
+
+For example, add the following prefix line to your output invocation:
+
+```nix
+outputs = inputs:
+  inputs.blueprint {
+    inherit inputs;
+    prefix = "nix/";
+  };
+```
+
+Then, you can add a `nix` folder inside the same folder that holds your flake file, and place
+all your folders within this `nix` folder.
+
+> **Tip:** Although you can choose any folder you like, we recommend the name "nix" for your folder,
+as this is becoming the defacto standard.
 
 ## systems
 
@@ -40,13 +56,13 @@ Example:
 
 ## nixpkgs.config
 
-If set, blueprint will create a new instance of nixpkgs for each systems, with the passed config.
+If set, blueprint will create a new instance of nixpkgs for each system, with the passed config.
 
 Default: `inputs.nixpkgs.legacyPackages.<system>`.
 
 Type: attrset.
 
-Example:
+For example, the following sets the allowUnfree attribute of nixpkgs.config to true:
 
 ```nix
 {
@@ -61,7 +77,7 @@ Example:
 
 > NOTE: It's better to use `perSystem` composition style instead of overlays if you can.
 
-If set, blueprint will create a new instance of nixpkgs for each systems, with the passed config.
+If set, blueprint will create a new instance of nixpkgs for each system, with the passed config.
 
 Default: `inputs.nixpkgs.legacyPackages.<system>`.
 
