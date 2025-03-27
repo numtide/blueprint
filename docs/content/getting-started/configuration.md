@@ -4,8 +4,8 @@ In this section we describe the blueprint configuration options:
 
 * **prefix**: This lets you specify a directory to hold the folders other than the flake.nix location.
 * **systems**: Defines which systems the project should be used and deployed on.
-* **nixpkgs.config**: If set, Blueprint will create a new instance of nixpkgs for each systems.
-* **nixpkgs.overlays**: If set, blueprint will create a new instance of nixpkgs for each systems.
+* **nixpkgs.config**: If set, Blueprint will create a new instance of nixpkgs for each system.
+* **nixpkgs.overlays**: If set, blueprint will create a new instance of nixpkgs for each system.
 
 These are available by changing the `flake.nix` output invocation with additional parameters.
 
@@ -56,7 +56,7 @@ Example:
 
 ## nixpkgs.config
 
-If set, blueprint will create a new instance of nixpkgs for each systems, with the passed config.
+If set, blueprint will create a new instance of nixpkgs for each system, with the passed config.
 
 Default: `inputs.nixpkgs.legacyPackages.<system>`.
 
@@ -77,7 +77,7 @@ For example, the following sets the allowUnfree attribute of nixpkgs.config to t
 
 > NOTE: It's better to use `perSystem` composition style instead of overlays if you can.
 
-If set, blueprint will create a new instance of nixpkgs for each systems, with the passed config.
+If set, blueprint will create a new instance of nixpkgs for each system, with the passed config.
 
 Default: `inputs.nixpkgs.legacyPackages.<system>`.
 

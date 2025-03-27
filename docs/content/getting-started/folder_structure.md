@@ -12,7 +12,6 @@ Here's a rundown of the options for your folders, followed by detailed explanati
 * `checks/` for flake checks.
 * `devshells/` for devshells.
 * `hosts/` for machine configurations.
-* `hosts/*/users/` for Home Manager configurations.
 * `lib/` for Nix functions.
 * `modules/` for NixOS and other modules.
 * `packages/` for packages.
@@ -129,6 +128,8 @@ command = "postgres"
 command = "memcached"
 ```
 
+## **Hosts** for machine configurations
+
 ## `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
 
 Nix runs on many different operating systems and architecture. When you create 
@@ -138,7 +139,7 @@ You can configure your project to work with different hosts, which are specific
 computers or systems.
 
 > **Note:** Whereas systems refer to operating systems running in conjunction
-with a specific architecture, a host refer to specific, single machine (virtual
+with a specific architecture, a host refers to specific, single machine (virtual
 or physical) that runs Nix or NixOS.
 
 Each folder contains either a NixOS or nix-darwin configuration:
@@ -179,7 +180,7 @@ Flake outputs:
 }
 ```
 
-#### `darwin-configuration.nix`
+### `darwin-configuration.nix`
 
 Evaluates to a [nix-darwin](https://github.com/LnL7/nix-darwin) configuration.
 
@@ -203,7 +204,7 @@ Flake outputs:
 * `darwinConfiguration.<hostname>`
 * `checks.<system>.darwin-<hostname>` - contains the system closure.
 
-#### `system-configuration.nix`
+### `system-configuration.nix`
 
 Evaluates to a [system-manager](https://github.com/numtide/system-manager)
 configuration.
@@ -228,7 +229,7 @@ Flake outputs:
 * `systemConfiguration.<hostname>`
 * `checks.<system>.system-<hostname>` - contains the system closure.
 
-#### `default.nix`
+### `default.nix`
 
 If present, this file takes precedence over `configuration.nix` and `darwin-configuration.nix` and is designed as an
 escape hatch, allowing the user complete control over `nixosSystem` or `darwinSystem` calls.
@@ -307,7 +308,9 @@ Because the username is part of the path to the configuration, the `home.usernam
 this username. This can be overridden manually. Likewise, `home.homeDirectory` will be set by default based
 on the username and operating system (`/Users/${username}` on macOS, `/home/${username}` on Linux).
 
-## `lib/default.nix`
+## **lib/** for Nix functions.
+
+### `lib/default.nix`
 
 Loaded if it exists.
 
@@ -327,11 +330,9 @@ Eg:
 { }
 ```
 
-## **hosts/*/users/** for Home Manager configurations.
+## **`modules/`** for NixOS and other modules.
 
-## **lib/** for Nix functions.
-
-## `modules/<type>/(<name>|<name>.nix)`
+### `modules/<type>/(<name>|<name>.nix)`
 
 Where the type can be any folder name.
 
@@ -352,7 +353,10 @@ Then that function is called before exposing the module as an output.
 This allows modules to refer to the flake where it is defined, while the module arguments refer to the flake where the module is consumed. Those can
 be but do not need to be the same flake.
 
-## `package.nix`, `formatter.nix`, `packages/<pname>(.nix|/default.nix)`
+
+## **`packages/`** for packages.
+
+### `package.nix`, `formatter.nix`, `packages/<pname>(.nix|/default.nix)`
 
 This `packages/` folder contains all your packages.
 
@@ -376,7 +380,9 @@ To consume a package inside a host from the same flake, `perSystem.self.<pname>`
 Takes the "per-system" arguments. On top of this, it also takes a `pname`
 argument.
 
-## `checks/<pname>(.nix|/default.nix)`
+## **`checks/`** for flake checks.
+
+### `checks/<pname>(.nix|/default.nix)`
 
 The `checks/` folder can be populated by packages that will be run when `nix flake checks` is invoked.
 
@@ -389,6 +395,8 @@ Inputs:
 Flake outputs:
 
 * `checks.<system>.<pname>` - will contain the package
+
+## **`templates/`** for flake templates.
 
 ### `templates/<name>/`
 
@@ -471,4 +479,124 @@ Now you can invoke either development shell by typing one of the following:
 
 * `nix develop .#backend` to launch the back end shell
 * `nix develop .#frontend` to launch the front end shell
+
+# Example Hosts and Modules
+
+This example comes from one of our available templates called [NixOS and Darwin Shared Homes Template](./built_in_templates.md#nixos-and-darwin-shared-homes-template).
+
+Here we create two Blueprint folders, hosts and modules with the following subfolders:
+
+```
+root folder
+├── flake.nix
+├── hosts
+│   ├── my-darwin
+│   │   ├── darwin-configuration.nix
+│   │   └── users
+│   │       └── me
+│   │           └── home-configuration.nix
+│   └── my-nixos
+│       ├── configuration.nix
+│       └── users
+│           └── me
+│               └── home-configuration.nix
+├── modules
+│   ├── home
+│   │   └── home-shared.nix
+│   └── nixos
+│       └── host-shared.nix
+└── README.md
+
+```
+
+If you run the above command, this is the set of files you'll get. Take a look at the difference between darwin-configuration.nix under hosts/my-darwin and configuration.nix under hosts/my-nixos.
+
+# Example Checks
+
+Let's look at how you can put individual tests in the checks folder.
+
+Start by creating a new folder and initializing the Flake with Blueprint:
+
+```
+nix flake init -t github:numtide/blueprint
+```
+
+Then create a folder called src, and another folder next to it called checks.
+
+In the src folder, create three python files:
+
+1. main.py
+
+```python
+from utils import string_length
+
+if __name__ == "__main__":
+    test_str = "hello"
+    print(f"Length of '{test_str}' is {string_length(test_str)}")
+```
+
+2. utils.py
+
+```python
+def string_length(s):
+    return len(s)
+```
+
+(As you can see, we're keeping this incredibly simple for demonstration purposes.)
+
+3. test_length.py
+
+```python
+from utils import string_length
+
+def test_string_length():
+    assert string_length("hello") == 5
+    assert string_length("") == 0
+    assert string_length("squirrel!") == 8
+```
+
+Next, in the checks folder, create a file called test.nix. (Really you can call it anything you want, as long as it has a nix extension.) And place the following in it:
+
+```nix
+{ pkgs, system, ... }:
+
+let
+  pythonEnv = pkgs.python3.withPackages (ps: with ps; [ pytest ]);
+in
+pkgs.runCommand "string-length-test"
+  {
+    buildInputs = [ pythonEnv ];
+    src = ./../src;
+  } ''
+    cp -r $src/* .
+    # Run pytest, save output to file
+    if ! pytest > result.log 2>&1; then
+      cat result.log >&2  # dump the error to stderr so nix shows it
+      exit 1
+    fi
+    touch $out
+  ''
+```
+
+Now run:
+
+```
+nix flake check
+```
+
+And your test will run. Because it's correct, you won't see any output. So perhaps try adjusting the function to make it purposely return the wrong number:
+
+```python
+def string_length(s):
+    return len(s) + 1
+```
+
+Then when you run `nix flake check` you should see the output from the pytest tool.
+
+> **Note:** You'll actually only see the last part of the output. At the bottom will be a message explaining how to view the full logs. It will be similar to this:
+
+```
+For full logs, run 'nix log /nix/store/8qqfm9i0b3idljh1n14yqhc12c5dv8j2-string-length-test.drv'.
+```
+
 
