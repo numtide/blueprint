@@ -594,9 +594,8 @@ def string_length(s):
 Then when you run `nix flake check` you should see the output from the pytest tool.
 
 > **Note:** You'll actually only see the last part of the output. At the bottom will be a message explaining how to view the full logs. It will be similar to this:
+> 
+> *For full logs, run 'nix log /nix/store/8qqfm9i0b3idljh1n14yqhc12c5dv8j2-string-length-test.drv'.*
+> 
 
-```
-For full logs, run 'nix log /nix/store/8qqfm9i0b3idljh1n14yqhc12c5dv8j2-string-length-test.drv'.
-```
-
-
+From there you can see the full output from pytest, including the assertion failures.
