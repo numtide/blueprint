@@ -589,7 +589,7 @@ let
                 }));
             in
             eachSystem (
-              { newScope, ... }: lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries
+              { newScope, system, ... }: filterPlatforms system (lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries)
             )
           );
 
