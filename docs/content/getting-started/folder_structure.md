@@ -6,8 +6,9 @@ Here's a rundown of the options for your folders, followed by detailed explanati
 
 ## High-level
 
-* `devshell.nix` for the default devshell
+* `flake.nix` for the default flake
 * `formatter.nix` for the default formatter
+* `devshell.nix` for the default devshell
 * `package.nix` for the default package
 * `checks/` for flake checks.
 * `devshells/` for devshells.
@@ -39,6 +40,10 @@ Those take the following arguments:
 ## **flake.nix** for the default flake
 
 This is the default flake.nix file. In general you won't need to modify this very much, except for some basic configurations (described [here](configuration.md)), as you'll be putting your main configurations in their own nix files in their own folders as described here in this document.
+
+## **formatter.nix** for the default formatter
+
+This is where you can provide default formatting. For an example, check out the one [used right here in Blueprint](https://github.com/numtide/blueprint/blob/main/formatter.nix).
 
 ## **devshell.nix** for the default devshell
 
