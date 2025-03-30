@@ -38,10 +38,7 @@ Those take the following arguments:
 
 ## **flake.nix** for the default flake
 
-This is the default flake.nix file. In general you won't need to modify this very much, 
-except for some basic configurations (described [here](configuration.md)),
-as you'll be putting your main configurations in their own nix files in their own folders
-as described here in this document.
+This is the default flake.nix file. In general you won't need to modify this very much, except for some basic configurations (described [here](configuration.md)), as you'll be putting your main configurations in their own nix files in their own folders as described here in this document.
 
 ## **devshell.nix** for the default devshell
 
@@ -60,9 +57,7 @@ In addition to the default devshell.nix file, you can configure multiple devshel
 
 `nix` files are expected to evaluate into a shell derivation, normally the result of calling `mkShell`.
 
-There might be many different `mkShell` implementations, like the one present in `nixpkgs` or the one
-from `numtide/devshell`, and perhaps others. The one you choose depends on the features you might want
-to use in your environment, like service management, modularity, command menu, etc.
+There might be many different `mkShell` implementations, like the one present in `nixpkgs` or the one from `numtide/devshell`, and perhaps others. The one you choose depends on the features you might want to use in your environment, like service management, modularity, command menu, etc.
 
 
 ```nix
@@ -132,15 +127,11 @@ command = "memcached"
 
 ## `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
 
-Nix runs on many different operating systems and architecture. When you create 
-a flake, you can define what systems it can produce outputs for.
+Nix runs on many different operating systems and architecture. When you create a flake, you can define what systems it can produce outputs for.
 
-You can configure your project to work with different hosts, which are specific
-computers or systems.
+You can configure your project to work with different hosts, which are specific computers or systems.
 
-> **Note:** Whereas systems refer to operating systems running in conjunction
-with a specific architecture, a host refers to specific, single machine (virtual
-or physical) that runs Nix or NixOS.
+> **Note:** Whereas systems refer to operating systems running in conjunction with a specific architecture, a host refers to specific, single machine (virtual or physical) that runs Nix or NixOS.
 
 Each folder contains either a NixOS or nix-darwin configuration:
 
@@ -206,8 +197,7 @@ Flake outputs:
 
 ### `system-configuration.nix`
 
-Evaluates to a [system-manager](https://github.com/numtide/system-manager)
-configuration.
+Evaluates to a [system-manager](https://github.com/numtide/system-manager) configuration.
 
 To support it, also add the following lines to the `flake.nix` file:
 
@@ -231,8 +221,7 @@ Flake outputs:
 
 ### `default.nix`
 
-If present, this file takes precedence over `configuration.nix` and `darwin-configuration.nix` and is designed as an
-escape hatch, allowing the user complete control over `nixosSystem` or `darwinSystem` calls.
+If present, this file takes precedence over `configuration.nix` and `darwin-configuration.nix` and is designed as an escape hatch, allowing the user complete control over `nixosSystem` or `darwinSystem` calls.
 
 ```nix
 { flake, inputs, ... }:
@@ -262,8 +251,7 @@ Flake outputs:
 
 ## `hosts/<hostname>/users/(<username>.nix|<username>/home-configuration.nix)`
 
-Defines a configuration for a Home Manager user. Users can either be defined as a nix file or directory containing
-a `home-configuration.nix` file.
+Defines a configuration for a Home Manager user. Users can either be defined as a nix file or directory containing a `home-configuration.nix` file.
 
 Before using this mapping, add the `home-manager` input to your `flake.nix` file:
 
@@ -293,20 +281,15 @@ Additional values passed:
 
 #### NixOS and nix-darwin
 
-If `home-manager` is an input to the flake, each host with any users defined will have the appropriate home-manager
-module imported and each user created automatically.
+If `home-manager` is an input to the flake, each host with any users defined will have the appropriate home-manager module imported and each user created automatically.
 
 The options `home-manager.useGlobalPkgs` and `home-manager.useUserPkgs` will default to true.
 
 #### Standalone configurations
 
-Users are also standalone Home Manager configurations. A user defined as `hosts/pc1/users/max.nix` can be
-applied using the `home-manager` CLI as `.#max@pc1`. The output name can be elided entirely if the current username
-and hostname match it, e.g. `home-manager switch --flake .` (note the lack of `#`).
+Users are also standalone Home Manager configurations. A user defined as `hosts/pc1/users/max.nix` can be applied using the `home-manager` CLI as `.#max@pc1`. The output name can be elided entirely if the current username and hostname match it, e.g. `home-manager switch --flake .` (note the lack of `#`).
 
-Because the username is part of the path to the configuration, the `home.username` option will default to
-this username. This can be overridden manually. Likewise, `home.homeDirectory` will be set by default based
-on the username and operating system (`/Users/${username}` on macOS, `/home/${username}` on Linux).
+Because the username is part of the path to the configuration, the `home.username` option will default to this username. This can be overridden manually. Likewise, `home.homeDirectory` will be set by default based on the username and operating system (`/Users/${username}` on macOS, `/home/${username}` on Linux).
 
 ## **lib/** for Nix functions.
 
@@ -349,9 +332,7 @@ If a module is wrapped in a function that accepts one (or more) of the following
 * `flake`
 * `inputs`
 
-Then that function is called before exposing the module as an output.
-This allows modules to refer to the flake where it is defined, while the module arguments refer to the flake where the module is consumed. Those can
-be but do not need to be the same flake.
+Then that function is called before exposing the module as an output. This allows modules to refer to the flake where it is defined, while the module arguments refer to the flake where the module is consumed. Those can be but do not need to be the same flake.
 
 
 ## **`packages/`** for packages.
@@ -365,7 +346,7 @@ maps to the "default" package.
 
 Inputs:
 
-The [per-system](#per-system) values, plus the `pname` attribute.
+The [per-system](#per-system) values, plus the `pname` attribute, where pname refers to the package name.
 
 Flake outputs:
 
@@ -377,8 +358,7 @@ To consume a package inside a host from the same flake, `perSystem.self.<pname>`
 
 #### `default.nix` or top-level `package.nix`
 
-Takes the "per-system" arguments. On top of this, it also takes a `pname`
-argument.
+Takes the "per-system" arguments. On top of this, it also takes a `pname` argument.
 
 ## **`checks/`** for flake checks.
 
@@ -412,8 +392,7 @@ Flake outputs:
 
 # Example devshells
 
-Because of the presence of Bluprint, nix files contained in these folders and their
-subfolders are immediately available.
+Because of the presence of Bluprint, nix files contained in these folders and their subfolders are immediately available.
 
 As an example, let's create two devshell setups and put them under the devshells folder.
 
@@ -442,12 +421,9 @@ pkgs.mkShell {
 }
 ```
 
-This code will create a devshell that includes node.js and the IDE called Geany. It also 
-sets the prompt to show the word `(backend)` as a reminder you're working in the bakcend. 
-You can use this devshell for backend development.
+This code will create a devshell that includes node.js and the IDE called Geany. It also  sets the prompt to show the word `(backend)` as a reminder you're working in the bakcend.  You can use this devshell for backend development.
 
-Now move over to the `frontend` folder. Create a file called `default.nix` and paste
-the following into it:
+Now move over to the `frontend` folder. Create a file called `default.nix` and paste the following into it:
 
 ```nix
 { pkgs }:
@@ -469,9 +445,7 @@ pkgs.mkShell {
 }
 ```
 
-This is similar to the backend, but you'll notice it also includes the CLI tools for Angular
-for frontend development. This code also sets the prompt to say `(frontend)` to remind
-you you're working in the front end.
+This is similar to the backend, but you'll notice it also includes the CLI tools for Angular for frontend development. This code also sets the prompt to say `(frontend)` to remind you you're working in the front end.
 
 Save both files and move to the root folder of the project.
 
