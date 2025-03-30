@@ -147,10 +147,7 @@ folder system works.
 
 > **Tip:** It's often good practice to put the folder structure inside its own root folder. That way the folders will be grouped together and easy to distinguish from other folders. As an example, look at [NumTide treefmt](https://github.com/numtide/treefmt). 
 
-Let's start with a root folder to hold the other folders. We'll use "nix"
-as that's the standard one we've created. Open up your root flake.nix file
-and expand the outputs line so it takes up multiple lines, and then add 
-in the following prefix attribute:
+Let's start with a root folder to hold the other folders. We'll use "nix" as that's the standard one we've created. Open up your root flake.nix file and expand the outputs line so it takes up multiple lines, and then add in the following prefix attribute:
 
 ```nix
   outputs = inputs:
@@ -160,25 +157,15 @@ in the following prefix attribute:
     };
 ```
 
-Now create a `nix` folder at the root of your project alongside the flake.nix
-and devshell.nix files.
+Now create a `nix` folder at the root of your project alongside the flake.nix and devshell.nix files.
 
 Now you're ready to create some folders.
 
-First, remember that folders are detected automatically by Blueprint.
-That way, you can drop in 
-place pre-built flakes. For example, on another project, you might have
-built a flake that configures mysql. In that project you placed it in
-a folder called packages. You can then simply create a folder in your new
-project also called packages, and drop the mysql file in there, and you're
-good to go. No messing around with giant monolithic flake.nix file.
+First, remember that folders are detected automatically by Blueprint. That way, you can drop in place pre-built flakes. For example, on another project, you might have built a flake that configures mysql. In that project you placed it in a folder called packages. You can then simply create a folder in your new project also called packages, and drop the mysql file in there, and you're good to go. No messing around with giant monolithic flake.nix file.
 
-Let's do something similar. Let's add some documentation to your app.
-Suppose we want to set up MkDocs with your project.
+Let's do something similar. Let's add some documentation to your app. Suppose we want to set up MkDocs with your project.
 
-> **Tip:** Remember, the whole point of Nix is to be able to set up reproducible
-environments. What that means is you don't need to install MkDocs globally. Instead,
-you can configure it directly in your project.
+> **Tip:** Remember, the whole point of Nix is to be able to set up reproducible environments. What that means is you don't need to install MkDocs globally. Instead, you can configure it directly in your project.
 
 1. Under the `nix` folder, create another folder called `packages` (all lowercase).
 2. Then under `packages` create a folder called `docs`.
@@ -215,13 +202,9 @@ pkgs.stdenvNoCC.mkDerivation {
 }
 ```
 
-> Because Blueprint is present, this code will get located automatically. And notice
-how it can be reused; indeed for this example, we simply copied it over from the
-[Blueprint project itself](https://github.com/numtide/blueprint/blob/main/packages/docs/default.nix).
+> Because Blueprint is present, this code will get located automatically. And notice how it can be reused; indeed for this example, we simply copied it over from the [Blueprint project itself](https://github.com/numtide/blueprint/blob/main/packages/docs/default.nix).
 
-This code defines a derivation that builds the documentation. Before you can use it,
-however, you'll need some documentation. So again off the root folder of your project,
-create a folder called `docs`. This is where you'll put the documentation.
+This code defines a derivation that builds the documentation. Before you can use it, however, you'll need some documentation. So again off the root folder of your project, create a folder called `docs`. This is where you'll put the documentation.
 
 Inside the `docs` folder, create file called `index.md` and paste in perhaps the following:
 
@@ -249,21 +232,14 @@ If you want to run the built-in mkdocs server to try out your site, type:
 nix develop .#docs
 ```
 
-Notice by calling nix develop, we're entering a development shell. But that happens
-only after we run the derivation. The derivation will compile our documents into
-a static site again (if necessary) and make the mkdocs command available to us while
-in the shell.
+Notice by calling nix develop, we're entering a development shell. But that happens only after we run the derivation. The derivation will compile our documents into a static site again (if necessary) and make the mkdocs command available to us while in the shell.
 
 Open up a browser and head to `http://127.0.0.1:8000/` and you should see the
 documentation open with a header "Welcome to my amazing app!" and so on.
 
 ## What did this demonstrate?
 
-Without Blueprint installed, you would have had to place the above default.nix file
-containing the mkdocs code inside your main flake.nix file, or link to it manually.
-But because of Blueprint, your setup will automatically scan a set of predetermined
-folders (including Packages) for files and find them automatically, making them
-available to use.
+Without Blueprint installed, you would have had to place the above default.nix file containing the mkdocs code inside your main flake.nix file, or link to it manually. But because of Blueprint, your setup will automatically scan a set of predetermined folders (including Packages) for files and find them automatically, making them available to use.
 
 > **Tip:** If you want to see what folders are available, head over to our 
 [folder strutures](folder_structure.md) documentation.
@@ -274,10 +250,3 @@ available to use.
 Included in the initial files created by Blueprint is a filed called .envrc. This file contains code to configure direnv, which allows you to enter a devshell simply by switching to the folder containing your project. That means you don't need to type `nix develop` after entering the folder. Then when you move up and out of the folder, you'll automatically exit the environment.
 
 For more information on configuring this feature, check out our guide at [Configuring Direnv](../guides/configuring_direnv.md)
-
-
-
-## Adding a host
-
-TODO
-

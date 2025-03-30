@@ -29,11 +29,9 @@ outputs = inputs:
   };
 ```
 
-Then, you can add a `nix` folder inside the same folder that holds your flake file, and place
-all your folders within this `nix` folder.
+Then, you can add a `nix` folder inside the same folder that holds your flake file, and place all your folders within this `nix` folder.
 
-> **Tip:** Although you can choose any folder you like, we recommend the name "nix" for your folder,
-as this is becoming the defacto standard.
+> **Tip:** Although you can choose any folder you like, we recommend the name "nix" for your folder, as this is becoming the defacto standard.
 
 ## systems
 
