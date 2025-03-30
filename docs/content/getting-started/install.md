@@ -69,7 +69,7 @@ Let's set up a development environment that includes:
 * Python
 * Python's numpy package
 
-> **TIP:** In this section we'll be creating a default developer environment. You can also set up multiple developer environments and place them in the devshell folder as shown in the devshell section [here](folder_structure.md).
+> **Tip:** In this section we'll be creating a default developer environment. You can also set up multiple developer environments and place them in the devshell folder as shown in the devshell section [here](folder_structure.md).
 
 Open up the devshell.nix file in your favorite editor, and update it to look like this:
 
@@ -161,7 +161,7 @@ Now create a `nix` folder at the root of your project alongside the flake.nix an
 
 Now you're ready to create some folders.
 
-First, remember that folders are detected automatically by Blueprint. That way, you can drop in place pre-built flakes. For example, on another project, you might have built a flake that configures mysql. In that project you placed it in a folder called packages. You can then simply create a folder in your new project also called packages, and drop the mysql file in there, and you're good to go. No messing around with giant monolithic flake.nix file.
+First, remember that folders are detected automatically by Blueprint. That way, you can drop in place pre-built packages. For example, on another project, you might have built a package that configures mysql. In that project you placed it in a folder called packages. You can then simply create a folder in your new project also called packages, and drop the mysql file in there, and you're good to go. No messing around with giant monolithic flake.nix file.
 
 Let's do something similar. Let's add some documentation to your app. Suppose we want to set up MkDocs with your project.
 
@@ -189,7 +189,7 @@ pkgs.stdenvNoCC.mkDerivation {
     mike
     mkdocs
     mkdocs-material
-    mkdocs-awesome-pages-plugin
+    mkdocs-awesome-nav
   ];
 
   buildPhase = ''
@@ -202,7 +202,7 @@ pkgs.stdenvNoCC.mkDerivation {
 }
 ```
 
-> Because Blueprint is present, this code will get located automatically. And notice how it can be reused; indeed for this example, we simply copied it over from the [Blueprint project itself](https://github.com/numtide/blueprint/blob/main/packages/docs/default.nix).
+> **Tip:** Because Blueprint is present, this code will get located automatically. And notice how it can be reused; indeed for this example, we simply copied it over from the [Blueprint project itself](https://github.com/numtide/blueprint/blob/main/packages/docs/default.nix).
 
 This code defines a derivation that builds the documentation. Before you can use it, however, you'll need some documentation. So again off the root folder of your project, create a folder called `docs`. This is where you'll put the documentation.
 

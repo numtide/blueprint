@@ -2,13 +2,15 @@
 
 Blueprint comes with several templates to help you get started with your project.
 
-> Note: We are continuing to add additional templates. Please check back periodically.
+> Note: Feel free to contribute new templates!
 
-To install from a template, specify the template name after the initial flake init command, preceded by a hash symbol. For example, to use the template called system manager, type:
+To install from a template, use the following format; for example, to use the template called system manager, type:
 
 ```
 nix flake init -t github:numtide/blueprint#system-manager
 ```
+
+where we appended a hash symbol followed by the template name.
 
 ## Default Template
 
@@ -34,41 +36,16 @@ If you drill down into the folders, you'll see inside the `hosts` folder, are a 
 
 Their respective configuration files both import a shared  `modules/nixos/host-shared.nix` module between them.
 
-Also, both hosts define a `me` user and their home-managed configuration simply imports `modules/homes/home-shared.nix`.
+Also, both hosts define a `me` user and their home-manager configuration simply imports `modules/homes/home-shared.nix`.
 
-Finally, notice in the root flake.nix we're adding the home-manager and nix-darwin inputs, which serve as dependencies for managing home configurations and macOS integrations, respectively.
+Finally, notice in the root `flake.nix` we're adding the home-manager and nix-darwin inputs, which serve as dependencies for managing home configurations and macOS integrations, respectively.
 
 The idea with this template is that you can use this example to get started on how to share configurations between different system and home environments on different hosts.
 
 
 ## Toml-DevEnvs
 
-```
-nix flake init -t github:numtide/blueprint#toml-devenvs
-```
-
-When you run ```nix develop```, you'll be presented with a friendly message like so:
-
-```
-🔨 Welcome to devshell
-
-[[general commands]]
-
-  hello - Program that produces a familiar, friendly greeting
-  menu  - prints this menu
-
-[devshell]$
-```
-
-As you can see, this is quite different from just your average shell. It's highly configurable, and easy to configure using TOML files. [TOML files](https://en.wikipedia.org/wiki/TOML) are a familiar way of storing configuration data. They support a natural way of  expressing name-value pairs grouped into sections, such as the following:
-
-```toml
-[database]
-server = "192.168.1.1"
-ports = [ 8000, 8001, 8002 ]
-connection_max = 5000
-enabled = true
-```
+Members of your team might be intimidated by Nix and flake files, and prefer a more traditional method of configuring their devshells. As such, we provide full support for TOML files.
 
 For more information, please visit our [devshell repo](https://github.com/numtide/devshell), which is what powers this template behind-the-scenes.
 

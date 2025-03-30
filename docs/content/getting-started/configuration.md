@@ -73,6 +73,8 @@ For example, the following sets the allowUnfree attribute of nixpkgs.config to t
 
 ## nixpkgs.overlays
 
+[TODO - Rework this part, as currently it's (almost) a copy of nixpkgs.config]
+
 > NOTE: It's better to use `perSystem` composition style instead of overlays if you can.
 
 If set, blueprint will create a new instance of nixpkgs for each system, with the passed config.
