@@ -1,6 +1,6 @@
 # Folder Structure
 
-Here's a rundown of the options for your folders, followed by detailed explanations of each.
+Here's a rundown of the options for your folders and default files, followed by detailed explanations of each.
 
 > **Tip:** We recommend using a [prefix](configuration.md) (usually `nix/`) that specifies a root folder that in turn holds these folders.
 
@@ -60,10 +60,11 @@ nix develop
 
 In addition to the default devshell.nix file, you can configure multiple devshells for different scenarios, such as one for a backend build and one for a frontend build. (See later in this doc for an example.) You can configure devshells through either .nix files or through .toml files.
 
-`nix` files are expected to evaluate into a shell derivation, normally the result of calling `mkShell`.
+The `nix` files under the devshells folder are expected to evaluate into a shell derivation, normally the result of calling `mkShell`.
 
-There might be many different `mkShell` implementations, like the one present in `nixpkgs` or the one from `numtide/devshell`, and perhaps others. The one you choose depends on the features you might want to use in your environment, like service management, modularity, command menu, etc.
+There might be many different `mkShell` implementations, like the one present in `nixpkgs` or the one from [`numtide/devshell`](https://github.com/numtide/devshell), and perhaps others. The one you choose depends on the features you might want to use in your environment, like service management, modularity, command menu, etc.
 
+Here's an example with the mkShell from nixpkgs:
 
 ```nix
 # devshell.nix
@@ -76,6 +77,8 @@ pkgs.mkShell {
   ];
 }
 ```
+
+And here's an example of one that uses mkShell from [numtide/devshell](https://github.com/numtide/devshell):
 
 ```nix
 # devshell.nix
@@ -278,11 +281,7 @@ Additional values passed:
 * other provided module arguments.
     Eg: home-manager provides `osConfig`, the host nixos/nix-darwin configuration.
 
-> The simplest way to have a common/shared user configuration between multiple systems is to create a
-> module at `modules/home/<name>.nix` ([docs](#modulestypenamenamenix)), and import that module
-> from `inputs.self.homeModules.<name>` for each user that should inherit it. This pattern makes
-> it easy to apply system-specific customizations on top of a shared, generic configuration.
-> An example of this setup is shown in the following template: `templates/nixos-and-darwin-shared-homes`.
+> **Tip:** The simplest way to have a common/shared user configuration between multiple systems is to create a module at `modules/home/<name>.nix` ([docs](#modulestypenamenamenix)), and import that module from `inputs.self.homeModules.<name>` for each user that should inherit it. This pattern makes it easy to apply system-specific customizations on top of a shared, generic configuration. An example of this setup is shown in the following template: `templates/nixos-and-darwin-shared-homes`.
 
 #### NixOS and nix-darwin
 
@@ -396,6 +395,8 @@ Flake outputs:
 * `templates.<name> -> path`
 
 # Example devshells
+
+[TODO: Consider moving these to the "Examples" guide, which is currently empty.]
 
 Because of the presence of Bluprint, nix files contained in these folders and their subfolders are immediately available.
 

@@ -202,7 +202,7 @@ pkgs.stdenvNoCC.mkDerivation {
 }
 ```
 
-> **Tip:** Because Blueprint is present, this code will get located automatically. And notice how it can be reused; indeed for this example, we simply copied it over from the [Blueprint project itself](https://github.com/numtide/blueprint/blob/main/packages/docs/default.nix).
+> **Tip:** Because Blueprint is present, this code will get loaded automatically as needed. And notice how it can be reused; indeed for this example, we simply copied it over from the [Blueprint project itself](https://github.com/numtide/blueprint/blob/main/packages/docs/default.nix).
 
 This code defines a derivation that builds the documentation. Before you can use it, however, you'll need some documentation. So again off the root folder of your project, create a folder called `docs`. This is where you'll put the documentation.
 
