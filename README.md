@@ -15,9 +15,9 @@
 
 </div>
 
-blueprint is an opinionated library that maps a standard folder structure to
-flake outputs. It makes common use cases easy both for the author and
-consumers.
+blueprint is an opinionated library that maps a standard folder structure to flake outputs, allowing you to divide up your flake into individual files across these folders. This allows you to modularize and isolate these files so that they can be maintained individually and even shared across multiple projects. 
+
+Blueprint also  makes common use cases easy for both the author and consumers.
 
 Eg:
 
@@ -52,20 +52,13 @@ and more!
 
 ## Rationale
 
-Nix is just a tool. It should help you, and stay out of the way. But because
-it's so flexible, everybody goes through a long period where they figure out
-how to structure their repo. `flake.nix` files become noisy with boilerplate.
+Nix is just a tool. It should help you, and stay out of the way. But because it's so flexible, everybody goes through a long period where they figure out how to structure their repo. `flake.nix` files become noisy with boilerplate.
 
-By making a few opinionated choices, we're able to cut 99% of the glue code
-you would find in most repos. A bit like Ruby on Rails or NextJS did for web
-frameworks, we do it for Nix packages. We map folder and files to flake
-outputs.
+By making a few opinionated choices, we're able to cut 99% of the glue code you would find in most repos. A bit like Ruby on Rails or NextJS did for web frameworks, we do it for Nix packages. We map folder and files to flake outputs.
 
-In some ways, this is the spiritual successor to `flake-utils`, my first
-attempt at making flakes easier to use.
+In some ways, this is the spiritual successor to `flake-utils`, my first attempt at making flakes easier to use.
 
-Blueprint isn't suitable for complex flakes but it does allow you to easily
-break out once your project becomes complicated beyond its capability.
+Blueprint isn't suitable for complex flakes but it does allow you to easily break out once your project becomes complicated beyond its capability.
 
 ## Design principles
 

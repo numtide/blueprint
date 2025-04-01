@@ -7,7 +7,7 @@
 
 Let's create a small project with Nix, and you'll see how to add Blueprint to your project.
 
-1. Install [Nix](https://nix.dev/install-nix).
+1. [Install Nix](https://nix.dev/install-nix) or use NixOS.
 2. Run `mkdir my-project && cd my-project`
 3. Run `nix flake init -t github:numtide/blueprint`.
 
