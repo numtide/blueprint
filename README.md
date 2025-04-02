@@ -156,6 +156,8 @@ This should print the message:
 Hello from docker!
 ```
 
+Note that result is really a symbolic link to a tar.gz file containing the image in the store.
+
 You can view your image by typing the usual:
 
 ```
