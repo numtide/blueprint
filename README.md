@@ -90,7 +90,7 @@ Let's create a package the builds a docker container from our source, assuming y
 print('Hello from docker!')
 ```
 
-Also from the root folder create a folder called packages, and under that a folder called docker-python-hello. Inside that folder create a file called default.nix, and place the following in it:
+Also from the root folder create a folder called packages, and under that a folder called `pkgs/docker-python-hello`. Inside that folder create a file called default.nix, and place the following in it:
 
 ```nix
 { pkgs, system, ... }:
