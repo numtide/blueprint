@@ -1,8 +1,3 @@
-*[todo: We need to put together a short style guide for consistency, including*
-* Nix (not nix)
-* NixOS (not NixOs etc.) 
-* Should we say "folder" or "directory"? Younger people seem to prefer "folder" ]
-
 # Installing Blueprint
 
 Let's create a small project with Nix, and you'll see how to add Blueprint to your project.
@@ -11,9 +6,9 @@ Let's create a small project with Nix, and you'll see how to add Blueprint to yo
 2. Run `mkdir my-project && cd my-project`
 3. Run `nix flake init -t github:numtide/blueprint`.
 
-Note: After you install Nix, you'll need to enable "experimental features." Find out how here. [TODO: Let's write a blog post on how to enable experimental features on the different platforms. Googling doesn't bring up high-quality explanations.]
+Note: After you install Nix, you'll need to enable "experimental features."
 
-This will give you a barebone project structure with a single `flake.nix` file and a single `devshell.nix` file. (It also provides a basic .envrc, which lets you configure direnv [TODO: Move our direnv document to a blog post] and a starter .gitignore file. Make sure you're aware of this .gitignore file before you accidentally overwrite it.)
+This will give you a barebone project structure with a single `flake.nix` file and a single `devshell.nix` file. (It also provides a basic .envrc, which lets you configure direnv and a starter .gitignore file. Make sure you're aware of this .gitignore file before you accidentally overwrite it.)
 
 Normally, without Blueprint, you would typically include a devShell section inside your flake.nix file. In that scenario, when you want to start a new project with a similar toolset, you'll likely need to copy over the devShell section of your flake.nix file to the new project's flake.nix file. But by using Blueprint, we've split out the devShell into its own file, allowing you to simply copy the file over.
 
