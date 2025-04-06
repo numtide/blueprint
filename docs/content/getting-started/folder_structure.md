@@ -2,7 +2,7 @@
 
 Here's a rundown of the options for your folders and default files, followed by detailed explanations of each.
 
-> **Tip:** We recommend using a [prefix](configuration.md) (usually `nix/`) that specifies a root folder that in turn holds these folders.
+> **Tip:** We recommend using a [prefix](configuration.md#prefix) (usually `nix/`) that specifies a root folder that in turn holds these folders.
 
 ## High-level
 
@@ -25,7 +25,7 @@ Each file typically gets passed a number of arguments.
 
 ### per-system
 
-Some of the files are instantiated multiple times, once per configured system. See [configuration](configuration.md) on how the list of systems is defined.
+Some of the files are instantiated multiple times, once per configured system. See [configuration](configuration.md#systems) on how the list of systems is defined.
 
 Those take the following arguments:
 
@@ -34,7 +34,7 @@ Those take the following arguments:
 * `system`: the current system attribute.
 * `perSystem`: contains the packages of all the inputs, filtered per system.
     Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
-* `pkgs`: an instance of nixpkgs, see [configuration](configuration.md) on how it's configured.
+* `pkgs`: an instance of nixpkgs, see [configuration](configuration.md#nixpkgsconfig) on how it's configured.
 
 
 ## **flake.nix** for the default flake

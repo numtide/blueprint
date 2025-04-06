@@ -20,7 +20,7 @@ Init command:
 nix flake init -t github:numtide/blueprint
 ```
 
-This is a bare-bones project as described in [getting started](../getting-started/install.md).
+This is a bare-bones project as described in [install](./install.md).
 
 ## NixOS and Darwin Shared Homes Template
 
