@@ -396,8 +396,6 @@ Flake outputs:
 
 # Example devshells
 
-[TODO: Consider moving these to the "Examples" guide, which is currently empty.]
-
 Because of the presence of Bluprint, nix files contained in these folders and their subfolders are immediately available.
 
 As an example, let's create two devshell setups and put them under the devshells folder.
