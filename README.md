@@ -78,19 +78,19 @@ Meanwhile, if you're ready to get started right away, here's what you do.
 
 1. [Install Nix](https://nix.dev/install-nix) or use NixOS.
 2. Run `mkdir my-project && cd my-project`
-3. Run `nix flake init -t github:numtide/blueprint`.
+3. Run `nix flake init -t github:numtide/blueprint`
 
 Now you're ready to create some folders and special files. The full documentation shows you all the folders and special files available, but for now let's create a couple of development shells, and a formatter. 
 
 Remember, the goal is to divide up the flake.nix file into individual modular parts. This not only helps keep your flake.nix file size down, it lets you create reusable modules that you can easily drop into other projects.
 
-Let's create a package the builds a docker container from our source, assuming your source lives in a folder called src off the root folder. Assume your src entry point is a file called hello.py; in this example, just put the following in hello.py:
+Let's create a package the builds a docker container from our source, assuming your source lives in a folder called src off the root folder. Assume your src entry point is a file called hello.py; in this example, just put the following in `hello.py`:
 
 ```
 print('Hello from docker!')
 ```
 
-Also from the root folder create a folder called packages, and under that a folder called `pkgs/docker-python-hello`. Inside that folder create a file called default.nix, and place the following in it:
+Also from the root folder create a folder called `packages`, and under that a folder called `docker-python-hello`. Inside that folder create a file called `default.nix`, and place the following in it:
 
 ```nix
 { pkgs, system, ... }:

@@ -73,17 +73,13 @@ For example, the following sets the allowUnfree attribute of nixpkgs.config to t
 
 ## nixpkgs.overlays
 
-[TODO - Rework this part, as currently it's (almost) a copy of nixpkgs.config]
-
 > NOTE: It's better to use `perSystem` composition style instead of overlays if you can.
 
-If set, blueprint will create a new instance of nixpkgs for each system, with the passed config.
-
-Default: `inputs.nixpkgs.legacyPackages.<system>`.
+If set, blueprint will create a new overlay with the passed config.
 
 Type: list of functions.
 
-Example:
+Here's an example that creates a couple of overlays; the first ("otherflake") reuses an overlay defined in another flake, and the second, an inline overlay, defines an overlay that replaces the default git package with the smaller gitMinimal:
 
 ```nix
 {
