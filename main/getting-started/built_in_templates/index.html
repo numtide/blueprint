@@ -10,11 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://numtide.github.io/blueprint/main/reference/reference/">
+        <link rel="canonical" href="https://numtide.github.io/blueprint/main/getting-started/built_in_templates/">
       
       
-        <link rel="prev" href="../configuration/">
+        <link rel="prev" href="../folder_structure/">
       
+      
+        <link rel="next" href="../configuration/">
       
       
       <link rel="icon" href="../../assets/images/logo.png">
@@ -22,7 +24,7 @@
     
     
       
-        <title>Reference - Blueprint</title>
+        <title>Using Templates - Blueprint</title>
       
     
     
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#reference" class="md-skip">
+        <a href="#using-templates" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Reference
+              Using Templates
             
           </span>
         </div>
@@ -272,31 +274,13 @@
         
   
   
-  
     
-    
-      <li class="md-tabs__item">
-        <a href="../../examples/examples/" class="md-tabs__link">
-          
-  
-    
-  
-  Examples
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
   
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../getting-started/install/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../install/" class="md-tabs__link">
           
   
     
@@ -322,28 +306,6 @@
     
   
   Guides
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-    
-  
-  
-    
-    
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../configuration/" class="md-tabs__link">
-          
-  
-    
-  
-  Reference
 
         </a>
       </li>
@@ -494,33 +456,44 @@
       
   
   
+    
   
   
+  
     
     
+      
+        
+      
+        
+      
+        
       
         
       
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   <span class="md-ellipsis">
-    Examples
+    Getting started
     
   </span>
   
@@ -528,10 +501,10 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
-            Examples
+            Getting started
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -542,11 +515,154 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/examples/" class="md-nav__link">
+      <a href="../install/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Examples
+    Installing Blueprint
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../folder_structure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Folder Structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Using Templates
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Using Templates
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#default-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      Default Template
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nixos-and-darwin-shared-homes-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      NixOS and Darwin Shared Homes Template
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#toml-devenvs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Toml-DevEnvs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-manager-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Manager Template
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration
     
   </span>
   
@@ -572,6 +688,8 @@
   
     
     
+      
+        
       
         
       
@@ -594,7 +712,7 @@
             
   
   <span class="md-ellipsis">
-    Getting started
+    Guides
     
   </span>
   
@@ -604,80 +722,6 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            Getting started
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../getting-started/install/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Install
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-      
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Guides
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Guides
           </label>
@@ -705,65 +749,6 @@
 
               
             
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
-            
-  
-  <span class="md-ellipsis">
-    Reference
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            Reference
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
               
                 
   
@@ -771,48 +756,16 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
+      <a href="../../guides/examples/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Configuration
+    Examples
     
   </span>
   
 
       </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    Reference
-    
-  </span>
-  
-
-      </a>
-      
     </li>
   
 
@@ -845,6 +798,50 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#default-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      Default Template
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nixos-and-darwin-shared-homes-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      NixOS and Darwin Shared Homes Template
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#toml-devenvs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Toml-DevEnvs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-manager-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Manager Template
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -862,7 +859,37 @@
   
 
 
-<h1 id="reference">Reference</h1>
+<h1 id="using-templates">Using Templates</h1>
+<p>Blueprint comes with several templates to help you get started with your project.</p>
+<blockquote>
+<p>Note: Feel free to contribute new templates!</p>
+</blockquote>
+<p>To install from a template, use the following format; for example, to use the template called system manager, type:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>nix flake init -t github:numtide/blueprint#system-manager
+</code></pre></div></td></tr></table></div>
+<p>where we appended a hash symbol followed by the template name.</p>
+<h2 id="default-template">Default Template</h2>
+<p>Init command:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a>nix<span class="w"> </span>flake<span class="w"> </span>init<span class="w"> </span>-t<span class="w"> </span>github:numtide/blueprint
+</code></pre></div></td></tr></table></div>
+<p>This is a bare-bones project as described in <a href="../install/">install</a>.</p>
+<h2 id="nixos-and-darwin-shared-homes-template">NixOS and Darwin Shared Homes Template</h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a>nix flake init -t github:numtide/blueprint#nixos-and-darwin-shared-homes
+</code></pre></div></td></tr></table></div>
+<p>This template is a bit of an example plus a template. You'll want to study all the files carefully. It shows how you can define and reuse modules, in this case nixos and home-manager.</p>
+<p>Look carefully at the folder structure; in this case we're using <code>hosts</code> and <code>modules</code> folders which are both picked up by Blueprint.</p>
+<p>If you drill down into the folders, you'll see inside the <code>hosts</code> folder, are a <code>my-darwin</code> folder and a <code>my-nixos</code> folder, both of which are imported by Blueprint. This defines the two hosts called <code>my-darwin</code> and <code>my-nixos</code>.</p>
+<p>Their respective configuration files both import a shared  <code>modules/nixos/host-shared.nix</code> module between them.</p>
+<p>Also, both hosts define a <code>me</code> user and their home-manager configuration simply imports <code>modules/homes/home-shared.nix</code>.</p>
+<p>Finally, notice in the root <code>flake.nix</code> we're adding the home-manager and nix-darwin inputs, which serve as dependencies for managing home configurations and macOS integrations, respectively.</p>
+<p>The idea with this template is that you can use this example to get started on how to share configurations between different system and home environments on different hosts.</p>
+<h2 id="toml-devenvs">Toml-DevEnvs</h2>
+<p>Members of your team might be intimidated by Nix and flake files, and prefer a more traditional method of configuring their devshells. As such, we provide full support for TOML files.</p>
+<p>For more information, please visit our <a href="https://github.com/numtide/devshell">devshell repo</a>, which is what powers this template behind-the-scenes.</p>
+<h2 id="system-manager-template">System Manager Template</h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a>nix flake init -t github:numtide/blueprint#system-manager
+</code></pre></div></td></tr></table></div>
+<p>Notice that the root flake.nix file we're adding the system-manager input, which is our own project. You can find it on GitHub at <a href="https://github.com/numtide/system-manager">system-manager</a>, where you can read more information on how to use it.</p>
 
 
 
@@ -892,7 +919,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../configuration/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Configuration">
+          <a href="../folder_structure/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Folder Structure">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -902,11 +929,27 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Configuration
+                Folder Structure
               </div>
             </div>
           </a>
         
+        
+          
+          <a href="../configuration/" class="md-footer__link md-footer__link--next" aria-label="Next: Configuration">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Configuration
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
         
       </nav>
     
