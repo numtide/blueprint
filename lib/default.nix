@@ -165,10 +165,26 @@ let
         ;
 
       # Adds the perSystem argument to the NixOS and Darwin modules
+      perSystemArgsModule = system: {
+        _module.args.perSystem = systemArgs.${system}.perSystem;
+      };
+
       perSystemModule =
-        { pkgs, ... }:
+        { config, lib, ... }:
         {
-          _module.args.perSystem = systemArgs.${pkgs.system}.perSystem;
+          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform.system) ];
+        };
+
+      perSystemHMModule =
+        { osConfig, ... }:
+        {
+          imports = [ (perSystemArgsModule osConfig.nixpkgs.hostPlatform.system) ];
+        };
+
+      perSystemSMModule =
+        { config, lib, ... }:
+        {
+          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform) ];
         };
 
       home-manager =
@@ -201,7 +217,7 @@ let
             { perSystem, config, ... }:
             {
               imports = [ homeManagerModule ];
-              home-manager.sharedModules = [ perSystemModule ];
+              home-manager.sharedModules = [ perSystemHMModule ];
               home-manager.extraSpecialArgs = specialArgs;
               home-manager.users = homesNested.${hostname};
               home-manager.useGlobalPkgs = lib.mkDefault true;
@@ -254,12 +270,13 @@ let
               username,
               modulePath,
               pkgs,
+              system,
             }:
             home-manager.lib.homeManagerConfiguration {
               inherit pkgs;
               extraSpecialArgs = specialArgs;
               modules = [
-                perSystemModule
+                (perSystemArgsModule system)
                 modulePath
                 (
                   { config, ... }:
@@ -293,13 +310,13 @@ let
           ) homesNested;
         in
         eachSystem (
-          { pkgs, ... }:
+          { pkgs, system, ... }:
           {
             homeConfigurations = lib.mapAttrs (
               _name: homeData:
               mkHomeConfiguration {
                 inherit (homeData) modulePath username;
-                inherit pkgs;
+                inherit pkgs system;
               }
             ) homesFlat;
           }
@@ -310,21 +327,21 @@ let
         let
           loadDefaultFn = { class, value }@inputs: inputs;
 
-          loadDefault = path: loadDefaultFn (import path { inherit flake inputs; });
+          loadDefault = hostName: path: loadDefaultFn (import path { inherit flake inputs hostName; });
 
-          loadNixOS = hostname: path: {
+          loadNixOS = hostName: path: {
             class = "nixos";
             value = inputs.nixpkgs.lib.nixosSystem {
               modules = [
                 perSystemModule
                 path
-              ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
-              inherit specialArgs;
+              ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
+              specialArgs = specialArgs // { inherit hostName; };
             };
           };
 
           loadNixDarwin =
-            hostname: path:
+            hostName: path:
             let
               nix-darwin =
                 inputs.nix-darwin
@@ -336,13 +353,13 @@ let
                 modules = [
                   perSystemModule
                   path
-                ] ++ mkHomeUsersModule hostname home-manager.darwinModules.default;
-                inherit specialArgs;
+                ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
+                specialArgs = specialArgs // { inherit hostName; };
               };
             };
 
           loadSystemManager =
-            _hostname: path:
+            hostName: path:
             let
               system-manager =
                 inputs.system-manager
@@ -352,10 +369,10 @@ let
               class = "system-manager";
               value = system-manager.lib.makeSystemConfig {
                 modules = [
-                  perSystemModule
+                  perSystemSMModule
                   path
                 ];
-                extraSpecialArgs = specialArgs;
+                extraSpecialArgs = specialArgs // { inherit hostName; };
               };
             };
 
@@ -363,7 +380,7 @@ let
             name:
             { path, type }:
             if builtins.pathExists (path + "/default.nix") then
-              loadDefault (path + "/default.nix")
+              loadDefault name (path + "/default.nix")
             else if builtins.pathExists (path + "/configuration.nix") then
               loadNixOS name (path + "/configuration.nix")
             else if builtins.pathExists (path + "/darwin-configuration.nix") then
@@ -467,7 +484,7 @@ let
             fi
 
             # Use git to traverse since nixfmt doesn't have good traversal
-            git ls-files "$@" | grep '\.nix$' | xargs --no-run-if-empty nixfmt
+            git ls-files -z "$@" | grep --null '\.nix$' | xargs --null --no-run-if-empty nixfmt
           '';
         })
       );
@@ -655,17 +672,7 @@ let
                 path:
                 let
                   importChecksFn = lib.mapAttrs (
-                    pname:
-                    { type, path }:
-                    import path {
-                      inherit
-                        pname
-                        flake
-                        inputs
-                        system
-                        pkgs
-                        ;
-                    }
+                    pname: { type, path }: import path (systemArgs.${system} // { inherit pname; })
                   );
                 in
 
