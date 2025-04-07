@@ -80,11 +80,11 @@ Meanwhile, if you're ready to get started right away, here's what you do.
 2. Run `mkdir my-project && cd my-project`
 3. Run `nix flake init -t github:numtide/blueprint`
 
-Now you're ready to create some folders and special files. The full documentation shows you all the folders and special files available, but for now let's create a couple of development shells, and a formatter. 
+Now you're ready to create some folders and special files. The full documentation shows you all the folders and special files available, but for now let's create a package that builds a docker image and runs it.
 
 Remember, the goal is to divide up the flake.nix file into individual modular parts. This not only helps keep your flake.nix file size down, it lets you create reusable modules that you can easily drop into other projects.
 
-Let's create a package the builds a docker container from our source, assuming your source lives in a folder called src off the root folder. Assume your src entry point is a file called hello.py; in this example, just put the following in `hello.py`:
+We'll create a package the builds a docker container from our source, assuming your source lives in a folder called src off the root folder. Assume your src entry point is a file called hello.py; in this example, just put the following in `hello.py`:
 
 ```
 print('Hello from docker!')
