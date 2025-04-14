@@ -336,7 +336,9 @@ let
                 perSystemModule
                 path
               ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
-              specialArgs = specialArgs // { inherit hostName; };
+              specialArgs = specialArgs // {
+                inherit hostName;
+              };
             };
           };
 
@@ -354,7 +356,9 @@ let
                   perSystemModule
                   path
                 ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
-                specialArgs = specialArgs // { inherit hostName; };
+                specialArgs = specialArgs // {
+                  inherit hostName;
+                };
               };
             };
 
@@ -372,7 +376,9 @@ let
                   perSystemSMModule
                   path
                 ];
-                extraSpecialArgs = specialArgs // { inherit hostName; };
+                extraSpecialArgs = specialArgs // {
+                  inherit hostName;
+                };
               };
             };
 
