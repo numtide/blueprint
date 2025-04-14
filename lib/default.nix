@@ -14,16 +14,33 @@ let
       flake,
       systems,
       nixpkgs,
+      # We need to treat the packages that are being defined in self differently,
+      # since otherwise we trigger infinite recursion when perSystem is defined in
+      # terms of the packages defined by self, and self uses perSystem to define
+      # its packages.
+      # We run into the infrec when trying to filter out packages based on their
+      # meta attributes, since that actually requires evaluating the package's derivation
+      # and can then in turn change the value of perSystem (by removing packages),
+      # which then requires to evaluate the package again, and so on and so forth.
+      # To break this cycle, we define perSystem in terms of the filesystem hierarchy,
+      # and not based on self.packages, and we don't apply any filtering based on
+      # meta attributes yet.
+      # The actual self.packages, can then be the filtered set of packages.
+      unfilteredPackages,
     }:
     let
-
       # Memoize the args per system
       systemArgs = lib.genAttrs systems (
         system:
         let
           # Resolve the packages for each input.
           perSystem = lib.mapAttrs (
-            _: flake: flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
+            name: flake:
+            # For self, we need to treat packages differently, see above
+            if name == "self" then
+              flake.legacyPackages.${system} or { } // unfilteredPackages.${system}
+            else
+              flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
           ) inputs;
 
           # Handle nixpkgs specially.
@@ -158,6 +175,7 @@ let
             flake
             nixpkgs
             systems
+            unfilteredPackages
             ;
         })
         eachSystem
@@ -336,7 +354,9 @@ let
                 perSystemModule
                 path
               ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
-              specialArgs = specialArgs // { inherit hostName; };
+              specialArgs = specialArgs // {
+                inherit hostName;
+              };
             };
           };
 
@@ -354,7 +374,9 @@ let
                   perSystemModule
                   path
                 ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
-                specialArgs = specialArgs // { inherit hostName; };
+                specialArgs = specialArgs // {
+                  inherit hostName;
+                };
               };
             };
 
@@ -372,7 +394,9 @@ let
                   perSystemSMModule
                   path
                 ];
-                extraSpecialArgs = specialArgs // { inherit hostName; };
+                extraSpecialArgs = specialArgs // {
+                  inherit hostName;
+                };
               };
             };
 
@@ -454,6 +478,30 @@ let
             )
           )
         );
+
+      # See the comment in mkEachSystem
+      unfilteredPackages =
+        lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
+          (
+            let
+              entries =
+                (optionalPathAttrs (src + "/packages") (path: importDir path lib.id))
+                // (optionalPathAttrs (src + "/package.nix") (path: {
+                  default = {
+                    inherit path;
+                  };
+                }))
+                // (optionalPathAttrs (src + "/formatter.nix") (path: {
+                  formatter = {
+                    inherit path;
+                  };
+                }));
+            in
+            eachSystem (
+              { newScope, system, ... }:
+              lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries
+            )
+          );
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
     {
@@ -571,27 +619,8 @@ let
           defaultNix
         ];
 
-      packages =
-        lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
-          (
-            let
-              entries =
-                (optionalPathAttrs (src + "/packages") (path: importDir path lib.id))
-                // (optionalPathAttrs (src + "/package.nix") (path: {
-                  default = {
-                    inherit path;
-                  };
-                }))
-                // (optionalPathAttrs (src + "/formatter.nix") (path: {
-                  formatter = {
-                    inherit path;
-                  };
-                }));
-            in
-            eachSystem (
-              { newScope, system, ... }: filterPlatforms system (lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries)
-            )
-          );
+      # See the comment in mkEachSystem
+      packages = lib.mapAttrs filterPlatforms unfilteredPackages;
 
       # Defining homeConfigurations under legacyPackages allows the home-manager CLI
       # to automatically detect the right output for the current system without
