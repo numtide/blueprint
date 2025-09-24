@@ -39,7 +39,7 @@ Defines for which systems the project should be used and deployed on.
 
 Default: it will load the `inputs.systems` flake input, first from the current flake, and then fallback to the blueprint one. (see <https://github.com/nix-systems/default>).
 
-Type: list of `<kernel>-<arch>` strings.
+Type: list of `<arch>-<kernel>` strings.
 
 Example:
 
