@@ -353,7 +353,8 @@ let
               modules = [
                 perSystemModule
                 path
-              ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
+              ]
+              ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
               specialArgs = specialArgs // {
                 inherit hostName;
               };
@@ -373,7 +374,8 @@ let
                 modules = [
                   perSystemModule
                   path
-                ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
+                ]
+                ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
                 specialArgs = specialArgs // {
                   inherit hostName;
                 };
@@ -400,6 +402,27 @@ let
               };
             };
 
+          loadNixOnDroid =
+            hostName: path:
+            let
+              nix-on-droid =
+                inputs.nix-on-droid
+                  or (throw ''${path} depends on nix-on-droid. To fix this, add `inputs.nix-on-droid.url = "github:nix-community/nix-on-droid";` to your flake'');
+            in
+            {
+              class = "nixOnDroid";
+              value = nix-on-droid.lib.nixOnDroidConfiguration {
+                modules = [
+                  perSystemModule
+                  path
+                ]
+                ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
+                specialArgs = specialArgs // {
+                  inherit hostName;
+                };
+              };
+            };
+
           loadHost =
             name:
             { path, type }:
@@ -411,6 +434,8 @@ let
               loadNixDarwin name (path + "/darwin-configuration.nix")
             else if builtins.pathExists (path + "/system-configuration.nix") then
               loadSystemManager name (path + "/system-configuration.nix")
+            else if builtins.pathExists (path + "/droid-configuration.nix") then
+              loadNixOnDroid name (path + "/droid-configuration.nix")
             else if builtins.hasAttr name homesNested then
               # If there are any home configurations defined for this host, they
               # must be standalone configurations since there is no OS config.
@@ -433,6 +458,8 @@ let
             "darwinConfigurations"
           else if x.value.class == "system-manager" then
             "systemConfigs"
+          else if x.value.class == "nixOnDroid" then
+            "nixOnDroidConfigurations"
           else
             throw "host '${x.name}' of class '${x.value.class or "unknown"}' not supported"
         ) (lib.attrsToList hosts)
@@ -505,10 +532,7 @@ let
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
     {
-      formatter = eachSystem (
-        { pkgs, perSystem, ... }:
-        perSystem.self.formatter or pkgs.nixfmt-tree
-      );
+      formatter = eachSystem ({ pkgs, perSystem, ... }: perSystem.self.formatter or pkgs.nixfmt-tree);
 
       lib = tryImport (src + "/lib") specialArgs;
 
@@ -606,6 +630,9 @@ let
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
       systemConfigs = lib.mapAttrs (_: x: x.value) (hostsByCategory.systemConfigs or { });
+      nixOnDroidConfigurations = lib.mapAttrs (_: x: x.value) (
+        hostsByCategory.nixOnDroidConfigurations or { }
+      );
 
       inherit modules;
 
@@ -666,6 +693,12 @@ let
             (withPrefix "system-" (
               lib.mapAttrs (_: x: x) (
                 lib.filterAttrs (_: x: x.system == system) (inputs.self.systemConfigs or { })
+              )
+            ))
+            # add nix-on-droid closures to checks
+            (withPrefix "droid-" (
+              lib.mapAttrs (_: x: x) (
+                lib.filterAttrs (_: x: x.system == system) (inputs.self.nixOnDroidConfigurations or { })
               )
             ))
             # load checks from the /checks folder. Those take precedence over the others.
