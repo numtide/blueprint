@@ -412,12 +412,13 @@ let
             {
               class = "nixOnDroid";
               value = nix-on-droid.lib.nixOnDroidConfiguration {
+                pkgs = systemArgs.aarch64-linux.pkgs; # hardcoding system like this is a bad idea but realistically no other system will be used here so maybe it's fine
                 modules = [
                   perSystemModule
                   path
                 ]
                 ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
-                specialArgs = specialArgs // {
+                extraSpecialArgs = specialArgs // {
                   inherit hostName;
                 };
               };
