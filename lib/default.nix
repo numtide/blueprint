@@ -698,9 +698,7 @@ let
             ))
             # add nix-on-droid closures to checks
             (withPrefix "droid-" (
-              lib.mapAttrs (_: x: x) (
-                lib.filterAttrs (_: x: x.system == system) (inputs.self.nixOnDroidConfigurations or { })
-              )
+              lib.mapAttrs (_: x: x.activationPackage) ((inputs.self.nixOnDroidConfigurations or { }))
             ))
             # load checks from the /checks folder. Those take precedence over the others.
             (filterPlatforms system (

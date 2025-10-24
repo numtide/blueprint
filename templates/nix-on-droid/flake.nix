@@ -11,10 +11,15 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    nix-on-droid.url = "github:nix-community/nix-on-droid";
+    nix-on-droid.url = "github:nix-community/nix-on-droid/release-24.05";
     nix-on-droid.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # Load the blueprint
-  outputs = inputs: inputs.blueprint { inherit inputs; };
+  outputs =
+    inputs:
+    inputs.blueprint {
+      inherit inputs;
+      nixpkgs.overlays = [ inputs.nix-on-droid.overlays.default ];
+    };
 }
