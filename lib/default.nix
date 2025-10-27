@@ -433,6 +433,10 @@ let
             "darwinConfigurations"
           else if x.value.class == "system-manager" then
             "systemConfigs"
+          else if x.value.class == "robotnix" then
+            "robotnixConfigurations"
+          else if x.value.class == "nix-on-droid" then
+            "nixOnDroidConfigurations"
           else
             throw "host '${x.name}' of class '${x.value.class or "unknown"}' not supported"
         ) (lib.attrsToList hosts)
@@ -606,6 +610,8 @@ let
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
       systemConfigs = lib.mapAttrs (_: x: x.value) (hostsByCategory.systemConfigs or { });
+      robotnixConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.robotnixConfigurations or { });
+      nixOnDroidConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixOnDroidConfigurations or { });
 
       inherit modules;
 
