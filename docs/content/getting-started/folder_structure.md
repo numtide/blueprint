@@ -258,7 +258,7 @@ Expected return value:
 
 Flake outputs:
 
-> Depending on the system type returned, the flake outputs will be the same as detailed for NixOS, Darwin or System Manager above. But in general the value will lie in <type in camel-case>Configurations.<hostname>.
+> Depending on the system type returned, the flake outputs will be the same as detailed for NixOS, Darwin or System Manager above. But in general the value will lie in `<type in camel-case>Configurations.<hostname>`.
 
 ## `hosts/<hostname>/users/(<username>.nix|<username>/home-configuration.nix)`
 
