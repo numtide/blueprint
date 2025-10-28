@@ -227,7 +227,7 @@ Additional values passed:
 
 Flake outputs:
 
-* `systemConfiguration.<hostname>`
+* `systemConfigs.<hostname>`
 * `checks.<system>.system-<hostname>` - contains the system closure.
 
 ### `default.nix`
@@ -253,12 +253,12 @@ Additional values passed:
 
 Expected return value:
 
-* `class` - type of system. Currently "nixos" or "nix-darwin".
+* `class` - type of system. Currently "nixos", "nix-darwin", "system-manager", "robotnix" or "nix-on-droid".
 * `value` - the evaluated system.
 
 Flake outputs:
 
-> Depending on the system type returned, the flake outputs will be the same as detailed for NixOS or Darwin above.
+> Depending on the system type returned, the flake outputs will be the same as detailed for NixOS, Darwin or System Manager above. But in general the value will lie in <type in camel-case>Configurations.<hostname>.
 
 ## `hosts/<hostname>/users/(<username>.nix|<username>/home-configuration.nix)`
 
