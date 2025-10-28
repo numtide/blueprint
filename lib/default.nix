@@ -360,6 +360,28 @@ let
             };
           };
 
+          loadNixOSRPi =
+            hostName: path:
+            let
+              nixos-raspberrypi =
+                inputs.nixos-raspberrypi
+                  or (throw ''${path} depends on nixos-raspberrypi. To fix this, add `inputs.nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi";` to your flake'');
+            in
+            {
+              class = "nixos";
+              value = nixos-raspberrypi.lib.nixosSystem {
+                modules = [
+                  perSystemModule
+                  path
+                ]
+                ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
+                specialArgs = specialArgs // {
+                  inherit hostName;
+                  nixos-raspberrypi = inputs.nixos-raspberrypi;
+                };
+              };
+            };
+
           loadNixDarwin =
             hostName: path:
             let
@@ -407,6 +429,8 @@ let
               loadDefault name (path + "/default.nix")
             else if builtins.pathExists (path + "/configuration.nix") then
               loadNixOS name (path + "/configuration.nix")
+            else if builtins.pathExists (path + "/rpi-configuration.nix") then
+              loadNixOSRPi name (path + "/rpi-configuration.nix")
             else if builtins.pathExists (path + "/darwin-configuration.nix") then
               loadNixDarwin name (path + "/darwin-configuration.nix")
             else if builtins.pathExists (path + "/system-configuration.nix") then
