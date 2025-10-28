@@ -1684,7 +1684,7 @@
 </ul>
 <p>Flake outputs:</p>
 <ul>
-<li><code>systemConfiguration.&lt;hostname&gt;</code></li>
+<li><code>systemConfigs.&lt;hostname&gt;</code></li>
 <li><code>checks.&lt;system&gt;.system-&lt;hostname&gt;</code> - contains the system closure.</li>
 </ul>
 <h3 id="defaultnix"><code>default.nix</code></h3>
@@ -1714,12 +1714,12 @@
 </ul>
 <p>Expected return value:</p>
 <ul>
-<li><code>class</code> - type of system. Currently "nixos" or "nix-darwin".</li>
+<li><code>class</code> - type of system. Currently "nixos", "nix-darwin", "system-manager", "robotnix" or "nix-on-droid".</li>
 <li><code>value</code> - the evaluated system.</li>
 </ul>
 <p>Flake outputs:</p>
 <blockquote>
-<p>Depending on the system type returned, the flake outputs will be the same as detailed for NixOS or Darwin above.</p>
+<p>Depending on the system type returned, the flake outputs will be the same as detailed for NixOS, Darwin or System Manager above. But in general the value will lie in <type in camel-case>Configurations.<hostname>.</p>
 </blockquote>
 <h2 id="hostshostnameusersusernamenixusernamehome-configurationnix"><code>hosts/&lt;hostname&gt;/users/(&lt;username&gt;.nix|&lt;username&gt;/home-configuration.nix)</code></h2>
 <p>Defines a configuration for a Home Manager user. Users can either be defined as a nix file or directory containing a <code>home-configuration.nix</code> file.</p>
