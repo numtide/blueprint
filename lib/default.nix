@@ -683,13 +683,13 @@ let
             # add nixos system closures to checks
             (withPrefix "nixos-" (
               lib.mapAttrs (_: x: x.config.system.build.toplevel) (
-                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.nixosConfigurations or { })
+                lib.filterAttrs (_: x: x.pkgs.stdenv.hostPlatform.system == system) (inputs.self.nixosConfigurations or { })
               )
             ))
             # add darwin system closures to checks
             (withPrefix "darwin-" (
               lib.mapAttrs (_: x: x.system) (
-                lib.filterAttrs (_: x: x.pkgs.system == system) (inputs.self.darwinConfigurations or { })
+                lib.filterAttrs (_: x: x.pkgs.stdenv.hostPlatform.system == system) (inputs.self.darwinConfigurations or { })
               )
             ))
             # add system-manager closures to checks

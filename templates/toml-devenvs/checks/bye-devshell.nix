@@ -1,7 +1,7 @@
 { pkgs, inputs, ... }:
 let
   # defined in devshells/bye.nix
-  shell = inputs.self.devShells.${pkgs.system}.bye;
+  shell = inputs.self.devShells.${pkgs.stdenv.hostPlatform.system}.bye;
 in
 pkgs.stdenvNoCC.mkDerivation {
   name = "hello-devshell";
