@@ -54,7 +54,7 @@ let
                 overlays = nixpkgs.overlays or [ ];
               };
         in
-        lib.makeScope lib.callPackageWith (_: {
+        lib.makeScope lib.callPackageWith (_: pkgs // {
           inherit
             inputs
             perSystem
