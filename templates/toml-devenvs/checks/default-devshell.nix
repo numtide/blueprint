@@ -1,7 +1,7 @@
 { pkgs, inputs, ... }:
 let
   # defined in devshell.toml at root of this flake.
-  shell = inputs.self.devShells.${pkgs.system}.default;
+  shell = inputs.self.devShells.${pkgs.stdenv.hostPlatform.system}.default;
 in
 pkgs.stdenvNoCC.mkDerivation {
   name = "default-devshell";
