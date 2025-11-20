@@ -12,7 +12,7 @@ jobs:
     outputs:
       folders: ${{ steps.jobs.outputs.folders }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - id: jobs
         run: |
           folders=$(find templates -mindepth 1 -maxdepth 1 -type d | jq -R . | jq -sc .)
@@ -29,6 +29,6 @@ jobs:
         folder: ${{ fromJSON(needs.find-templates.outputs.folders) }}
     steps:
       - uses: cachix/install-nix-action@v31
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: nix flake check --override-input blueprint ../..
         working-directory: ${{ matrix.folder }}
