@@ -133,7 +133,7 @@ command = "memcached"
 
 ## **Hosts** for machine configurations
 
-## `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix)`
+## `hosts/<hostname>/(default.nix|configuration.nix|darwin-configuration.nix,system-configuration.nix,rpi-configuration.nix)`
 
 Nix runs on many different operating systems and architecture. When you create a flake, you can define what systems it can produce outputs for.
 
@@ -229,6 +229,30 @@ Flake outputs:
 
 * `systemConfigs.<hostname>`
 * `checks.<system>.system-<hostname>` - contains the system closure.
+
+### `rpi-configuration.nix`
+
+Evaluates to a [nixos-raspberrypi](https://github.com/nvmd/nixos-raspberrypi) configuration.
+
+To support it, also add the following lines to the `flake.nix` file:
+
+```nix
+{
+  inputs.nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi";
+}
+```
+
+Additional values passed:
+
+* `inputs` maps to the current flake inputs.
+* `flake` maps to `inputs.self`.
+* `hostName`: the hostname of the system, which is used to generate the output names.
+* `perSystem`: contains the packages of all the inputs, filtered per system.
+    Eg: `perSystem.nixos-anywhere.default` is a shorthand for `inputs.nixos-anywhere.packages.<system>.default`.
+
+Flake outputs:
+
+* `nixosConfigurations.<hostname>`
 
 ### `default.nix`
 
