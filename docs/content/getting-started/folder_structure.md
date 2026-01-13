@@ -353,7 +353,7 @@ maps to the "default" package.
 
 Inputs:
 
-The [per-system](#per-system) values, plus the `pname` attribute, where pname refers to the package name.
+The [per-system](#per-system) values, plus the `pname` attribute, where pname refers to the package name. To keep compatibility with the nixpkgs way of defining packages it is also possible for the inputs to be a subset of nixpkgs.
 
 Flake outputs:
 
