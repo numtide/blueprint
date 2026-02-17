@@ -324,25 +324,67 @@ Because the username is part of the path to the configuration, the `home.usernam
 
 ## **lib/** for Nix functions.
 
-### `lib/default.nix`
+All `.nix` files in `lib/` are automatically imported and exposed as `lib.<name>`.
 
-Loaded if it exists.
+### Structure
 
-Inputs:
+```
+lib/
+├── default.nix         # Optional: merged into lib
+├── strings.nix         # Available as lib.strings
+└── math.nix            # Available as lib.math
+```
 
-* `flake`
-* `inputs`
-
-Flake outputs:
-
-* `lib` - contains the return value of `lib/default.nix`
-
-Eg:
+### Examples
 
 ```nix
-{ flake, inputs }:
-{ }
+# lib/add.nix - Simple function
+a: b: a + b
+
+# lib/greet.nix - Function with inputs
+{ inputs, flake, ... }:
+name: "Hello, ${name}!"
+
+# lib/strings.nix - Attrset of functions
+{ inputs, flake, ... }:
+{
+  capitalize = str: /* ... */;
+  kebabToCamel = str: /* ... */;
+}
 ```
+
+### Usage
+
+```nix
+inputs.myflake.lib.add 1 2                      # => 3
+inputs.myflake.lib.greet "World"                # => "Hello, World!"
+inputs.myflake.lib.strings.capitalize "hello"   # => "Hello"
+```
+
+Files can optionally receive `{ inputs, flake, ... }` - blueprint auto-detects this.
+
+`lib/default.nix` exports are merged and take precedence over auto-imported files.
+
+### Testing
+
+Export a `tests` attribute from your `lib/` to run [nix-unit](https://github.com/nix-community/nix-unit) tests:
+
+```nix
+# lib/default.nix
+{ inputs, flake, ... }:
+{
+  add = a: b: a + b;
+  
+  tests = {
+    testAdd = {
+      expr = (import ./default.nix { inherit inputs flake; }).add 1 2;
+      expected = 3;
+    };
+  };
+}
+```
+
+Tests run automatically with `nix flake check` as `checks.<system>.lib-tests`.
 
 ## **`modules/`** for NixOS and other modules.
 

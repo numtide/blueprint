@@ -538,7 +538,50 @@ let
         perSystem.self.formatter or pkgs.nixfmt-tree
       );
 
-      lib = tryImport (src + "/lib") specialArgs;
+      lib =
+        let
+          # Try to load lib/default.nix (legacy behavior)
+          defaultLib = tryImport (src + "/lib") specialArgs;
+          
+          # Smart import: check if function expects specialArgs
+          smartImport = path:
+            let
+              module = import path;
+            in
+            if builtins.isFunction module then
+              let
+                # Get the function's expected arguments
+                args = builtins.functionArgs module;
+                # Check if it expects any of the specialArgs keys or has ...
+                expectsSpecialArgs = 
+                  (builtins.length (builtins.attrNames args) > 0) ||
+                  (args ? inputs) ||
+                  (args ? flake) ||
+                  (args ? self);
+              in
+              if expectsSpecialArgs then
+                # Call with specialArgs
+                module specialArgs
+              else
+                # Return function as-is (doesn't expect specialArgs)
+                module
+            else
+              # Not a function, return as-is
+              module;
+          
+          # Auto-import lib/* files as an attrset
+          libFiles = optionalPathAttrs (src + "/lib") (
+            path:
+            let
+              entries = importDir path lib.id;
+              # Filter out default.nix to avoid duplication
+              nonDefaultEntries = builtins.removeAttrs entries [ "default" ];
+            in
+            lib.mapAttrs (_name: { path, ... }: smartImport path) nonDefaultEntries
+          );
+        in
+        # Merge: lib/default.nix takes precedence, then add auto-imported files
+        libFiles // defaultLib;
 
       # expose the functor to the top-level
       # FIXME: only if it exists
