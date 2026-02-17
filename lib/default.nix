@@ -4,7 +4,7 @@ let
   bpInputs = inputs;
   nixpkgs = bpInputs.nixpkgs;
   lib = nixpkgs.lib;
-
+in rec {
   # A generator for the top-level attributes of the flake.
   #
   # Designed to work with https://github.com/nix-systems
@@ -773,16 +773,6 @@ let
       expected = 1;
     };
   };
-in
-{
-  inherit
-    filterPlatforms
-    importDir
-    mkBlueprint
-    tests
-    tryImport
-    withPrefix
-    ;
 
   # Make this callable
   __functor = _: mkBlueprint;
