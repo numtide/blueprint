@@ -205,6 +205,18 @@ in rec {
           imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform) ];
         };
 
+      nixpkgsConfigModule =
+        { lib, ... }:
+        {
+          nixpkgs =
+            (lib.optionalAttrs ((nixpkgs.config or { }) != { }) {
+              config = nixpkgs.config;
+            })
+            // (lib.optionalAttrs ((nixpkgs.overlays or [ ]) != [ ]) {
+              overlays = nixpkgs.overlays;
+            });
+        };
+
       home-manager =
         inputs.home-manager
           or (throw ''home configurations require Home Manager. To fix this, add `inputs.home-manager.url = "github:nix-community/home-manager";` to your flake'');
@@ -351,6 +363,7 @@ in rec {
             class = "nixos";
             value = inputs.nixpkgs.lib.nixosSystem {
               modules = [
+                nixpkgsConfigModule
                 perSystemModule
                 path
               ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
@@ -371,6 +384,7 @@ in rec {
               class = "nixos";
               value = nixos-raspberrypi.lib.nixosSystem {
                 modules = [
+                  nixpkgsConfigModule
                   perSystemModule
                   path
                 ]
@@ -393,6 +407,7 @@ in rec {
               class = "nix-darwin";
               value = nix-darwin.lib.darwinSystem {
                 modules = [
+                  nixpkgsConfigModule
                   perSystemModule
                   path
                 ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
