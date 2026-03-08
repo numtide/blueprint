@@ -256,6 +256,26 @@ in rec {
         in
         lib.optional (builtins.hasAttr hostname homesNested) module;
 
+      homesGeneric =
+        let
+          getEntryPath =
+            _username: userEntry:
+            if builtins.pathExists (userEntry.path + "/home-configuration.nix") then
+              userEntry.path + "/home-configuration.nix"
+            else
+              # If we decide to add users/<username>.nix, it's as simple as
+              # testing `if userEntry.type == "regular"`
+              null;
+
+          mkUsers =
+            userEntries:
+            let
+              users = lib.mapAttrs getEntryPath userEntries;
+            in
+            lib.filterAttrs (_name: value: value != null) users;
+        in
+        importDir (src + "/users") mkUsers;
+
       # Attribute set mapping hostname (defined in hosts/) to a set of home
       # configurations (modules) for that host. If a host has no home
       # configuration, it will be omitted from the set. Likewise, if the user
@@ -346,9 +366,9 @@ in rec {
               _name: homeData:
               mkHomeConfiguration {
                 inherit (homeData) modulePath username;
-                inherit pkgs system;
-              }
-            ) homesFlat
+                  inherit pkgs system;
+                }
+              ) homesFlat
               // lib.mapAttrs (
                 username: modulePath: mkHomeConfiguration { inherit pkgs username modulePath; }
               ) homesGeneric;
