@@ -54,7 +54,7 @@ in rec {
                 overlays = nixpkgs.overlays or [ ];
               };
         in
-        lib.makeScope lib.callPackageWith (_: pkgs{
+        lib.makeScope lib.callPackageWith (_: pkgs // {
           inherit
             inputs
             perSystem
