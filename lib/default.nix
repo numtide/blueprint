@@ -182,27 +182,10 @@ in rec {
         systemArgs
         ;
 
-      # Adds the perSystem argument to the NixOS and Darwin modules
-      perSystemArgsModule = system: {
-        _module.args.perSystem = systemArgs.${system}.perSystem;
-      };
-
       perSystemModule =
-        { config, lib, ... }:
+        { pkgs, ... }:
         {
-          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform.system) ];
-        };
-
-      perSystemHMModule =
-        { osConfig, ... }:
-        {
-          imports = [ (perSystemArgsModule osConfig.nixpkgs.hostPlatform.system) ];
-        };
-
-      perSystemSMModule =
-        { config, lib, ... }:
-        {
-          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform) ];
+          _module.args.perSystem = systemArgs.${pkgs.stdenv.hostPlatform.system}.perSystem;
         };
 
       nixpkgsConfigModule =
@@ -244,10 +227,10 @@ in rec {
         hostname: homeManagerModule:
         let
           module =
-            { perSystem, config, ... }:
+            { perSystem, osConfig, config, ... }:
             {
               imports = [ homeManagerModule ];
-              home-manager.sharedModules = [ perSystemHMModule ];
+              home-manager.sharedModules = [ perSystemModule ];
               home-manager.extraSpecialArgs = specialArgs;
               home-manager.users = homesNested.${hostname};
               home-manager.useGlobalPkgs = lib.mkDefault true;
@@ -434,9 +417,7 @@ in rec {
                   perSystemModule
                   path
                 ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
-                specialArgs = specialArgs // {
-                  inherit hostName;
-                };
+                specialArgs = specialArgs
               };
             };
 
