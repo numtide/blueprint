@@ -372,9 +372,8 @@ in rec {
                 nixpkgsConfigModule
                 perSystemModule
                 path
-              ] + mkHomeUsersModule hostname home-manager.nixosModules.default;
-                inherit specialArgs;
-              };
+              ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
+              inherit specialArgs;
             };
           };
 
@@ -392,12 +391,10 @@ in rec {
                   nixpkgsConfigModule
                   perSystemModule
                   path
-                ]
-                ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
-                inherit specialArgs;
-                };
-              };
+                ]] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
+              inherit specialArgs;
             };
+          };
 
           loadNixDarwin =
             hostName: path:
@@ -414,8 +411,7 @@ in rec {
                   perSystemModule
                   path
                 ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
-                specialArgs = specialArgs // {
-                inherit hostName;
+                inherit specialArgs;
               };
             };
 
