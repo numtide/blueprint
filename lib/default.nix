@@ -391,7 +391,7 @@ in rec {
                   nixpkgsConfigModule
                   perSystemModule
                   path
-                ]] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
+                 ] ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
               inherit specialArgs;
             };
           };
