@@ -365,7 +365,7 @@ in rec {
           loadDefault = path: loadDefaultFn (import path { inherit flake inputs; });
 
 
-          loadNixOS = hostName: path: {
+          loadNixOS = hostname: path: {
             class = "nixos";
             value = inputs.nixpkgs.lib.nixosSystem {
               modules = [
@@ -378,7 +378,7 @@ in rec {
           };
 
           loadNixOSRPi =
-            hostName: path:
+            hostname: path:
             let
               nixos-raspberrypi =
                 inputs.nixos-raspberrypi
@@ -397,7 +397,7 @@ in rec {
           };
 
           loadNixDarwin =
-            hostName: path:
+            hostname: path:
             let
               nix-darwin =
                 inputs.nix-darwin
@@ -410,13 +410,13 @@ in rec {
                   nixpkgsConfigModule
                   perSystemModule
                   path
-                ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
+                ] ++ mkHomeUsersModule hostname home-manager.darwinModules.default;
                 inherit specialArgs;
               };
             };
 
           loadSystemManager =
-            hostName: path:
+            hostname: path:
             let
               system-manager =
                 inputs.system-manager
@@ -430,7 +430,7 @@ in rec {
                   path
                 ];
                 extraSpecialArgs = specialArgs // {
-                  inherit hostName;
+                  inherit hostname;
                 };
               };
             };
