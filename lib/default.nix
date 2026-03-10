@@ -426,7 +426,7 @@ in rec {
               class = "system-manager";
               value = system-manager.lib.makeSystemConfig {
                 modules = [
-                  perSystemSMModule
+                  perSystemModule
                   path
                 ];
                 extraSpecialArgs = specialArgs // {
