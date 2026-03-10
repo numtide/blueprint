@@ -348,7 +348,7 @@ in rec {
               _name: homeData:
               mkHomeConfiguration {
                 inherit (homeData) modulePath username;
-                  inherit pkgs system;
+                  inherit pkgs;
                 }
               ) homesFlat
               // lib.mapAttrs (
