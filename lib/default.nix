@@ -227,7 +227,7 @@ in rec {
         hostname: homeManagerModule:
         let
           module =
-            { perSystem, osConfig, config, ... }:
+            { perSystem, ... }:
             {
               imports = [ homeManagerModule ];
               home-manager.sharedModules = [ perSystemModule ];
@@ -309,7 +309,7 @@ in rec {
               inherit pkgs;
               extraSpecialArgs = specialArgs;
               modules = [
-                (perSystemArgsModule system)
+                perSystemModule
                 modulePath
                 (
                   { config, ... }:
@@ -343,7 +343,7 @@ in rec {
           ) homesNested;
         in
         eachSystem (
-          { pkgs, system, ... }:
+          { pkgs, ... }:
           {
             homeConfigurations = lib.mapAttrs (
               _name: homeData:
@@ -363,7 +363,8 @@ in rec {
         let
           loadDefaultFn = { class, value }@inputs: inputs;
 
-          loadDefault = hostName: path: loadDefaultFn (import path { inherit flake inputs hostName; });
+          loadDefault = path: loadDefaultFn (import path { inherit flake inputs; });
+
 
           loadNixOS = hostName: path: {
             class = "nixos";
@@ -372,9 +373,8 @@ in rec {
                 nixpkgsConfigModule
                 perSystemModule
                 path
-              ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
-              specialArgs = specialArgs // {
-                inherit hostName;
+              ] + mkHomeUsersModule hostname home-manager.nixosModules.default;
+                inherit specialArgs;
               };
             };
           };
@@ -387,17 +387,15 @@ in rec {
                   or (throw ''${path} depends on nixos-raspberrypi. To fix this, add `inputs.nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi";` to your flake'');
             in
             {
-              class = "nixos";
+              class = "nixos-raspberrypi";
               value = nixos-raspberrypi.lib.nixosSystem {
                 modules = [
                   nixpkgsConfigModule
                   perSystemModule
                   path
                 ]
-                ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
-                specialArgs = specialArgs // {
-                  inherit hostName;
-                  nixos-raspberrypi = inputs.nixos-raspberrypi;
+                ++ mkHomeUsersModule hostname home-manager.nixosModules.default;
+                inherit specialArgs;
                 };
               };
             };
@@ -417,7 +415,8 @@ in rec {
                   perSystemModule
                   path
                 ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
-                specialArgs = specialArgs
+                specialArgs = specialArgs // {
+                inherit hostName;
               };
             };
 
@@ -445,7 +444,7 @@ in rec {
             name:
             { path, type }:
             if builtins.pathExists (path + "/default.nix") then
-              loadDefault name (path + "/default.nix")
+              loadDefault  (path + "/default.nix")
             else if builtins.pathExists (path + "/configuration.nix") then
               loadNixOS name (path + "/configuration.nix")
             else if builtins.pathExists (path + "/rpi-configuration.nix") then
