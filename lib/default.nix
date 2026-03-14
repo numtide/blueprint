@@ -37,10 +37,11 @@ in rec {
           perSystem = lib.mapAttrs (
            name: flake:
             # For self, we need to treat packages differently, see above
+            if name == "_" then
+              flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
+             else
             if name == "self" then
               flake.legacyPackages.${system} or { } // unfilteredPackages.${system}
-            else if name == "_" then
-              flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
              else
              flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
           ) inputs;
