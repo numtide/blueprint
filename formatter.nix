@@ -9,7 +9,7 @@ let
 
     runtimeInputs = [
       pkgs.deadnix
-      pkgs.nixfmt-rfc-style
+      pkgs.nixfmt
     ];
 
     text = ''
