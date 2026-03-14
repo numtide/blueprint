@@ -35,12 +35,14 @@ in rec {
         let
           # Resolve the packages for each input.
           perSystem = lib.mapAttrs (
-            name: flake:
+           name: flake:
             # For self, we need to treat packages differently, see above
             if name == "self" then
               flake.legacyPackages.${system} or { } // unfilteredPackages.${system}
-            else
+            else if name == "_" then
               flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
+             else
+             flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
           ) inputs;
 
           # Handle nixpkgs specially.
@@ -717,7 +719,15 @@ in rec {
                 path:
                 let
                   importChecksFn = lib.mapAttrs (
-                    pname: { type, path }: import path (systemArgs.${system} // { inherit pname; })
+                    pname: { type, path }: import path {
+                      inherit
+                        pname
+                        flake
+                        inputs
+                        system
+                        pkgs
+                        ;
+                    }
                   );
                 in
 
