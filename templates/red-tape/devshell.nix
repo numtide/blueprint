@@ -1,1 +1,0 @@
-{ pkgs }:\npkgs.mkShell {\n  # Add build dependencies\n  packages = [ ];\n\n  # Add environment variables\n  env = { };\n\n  # Load custom bash code\n  shellHook = ''\n\n  '';\n}
