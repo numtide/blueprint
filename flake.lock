@@ -1,5 +1,38 @@
 {
   "nodes": {
+    "adios": {
+      "locked": {
+        "lastModified": 1772186395,
+        "narHash": "sha256-NshyMZYZwjKMLKEX0eDf9Fcekq8MFNFk02wW5knzlZU=",
+        "owner": "adisbladis",
+        "repo": "adios",
+        "rev": "6a54071689ec9ec784a16e4eec8ddb864eca2982",
+        "type": "github"
+      },
+      "original": {
+        "owner": "adisbladis",
+        "repo": "adios",
+        "type": "github"
+      }
+    },
+    "adios-flake": {
+      "inputs": {
+        "adios": "adios"
+      },
+      "locked": {
+        "lastModified": 1772646328,
+        "narHash": "sha256-0xwNbjvHON8LqhIx5VMPZpR1B5Unq/7BH6tktELwRyA=",
+        "owner": "Mic92",
+        "repo": "adios-flake",
+        "rev": "6082a7bf428fe6c29b80c8ef4582ffce46cfea77",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "adios-flake",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1773389992,
@@ -16,9 +49,45 @@
         "type": "github"
       }
     },
+    "red-tape": {
+      "inputs": {
+        "adios-flake": "adios-flake",
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1774285314,
+        "narHash": "sha256-ad5J3MsK11stsDfR0no6zr6K/c7Rr8HCQFpVw1ixmLA=",
+        "owner": "phaer",
+        "repo": "red-tape",
+        "rev": "5ad2da408cc59621dfedd2d9256e0b6c082256c6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "phaer",
+        "repo": "red-tape",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1772433332,
+        "narHash": "sha256-izhTDFKsg6KeVBxJS9EblGeQ8y+O8eCa6RcW874vxEc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "cf59864ef8aa2e178cccedbe2c178185b0365705",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
+        "red-tape": "red-tape",
         "systems": "systems"
       }
     },
