@@ -190,19 +190,19 @@ in rec {
       perSystemModule =
         { config, lib, ... }:
         {
-          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform.system) ];
+          imports = [ (perSystemArgsModule config.nixpkgs.system) ];
         };
 
       perSystemHMModule =
         { osConfig, ... }:
         {
-          imports = [ (perSystemArgsModule osConfig.nixpkgs.hostPlatform.system) ];
+          imports = [ (perSystemArgsModule osConfig.nixpkgs.system) ];
         };
 
       perSystemSMModule =
         { config, lib, ... }:
         {
-          imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform) ];
+          imports = [ (perSystemArgsModule config.nixpkgs.system) ];
         };
 
       home-manager =
