@@ -10,7 +10,10 @@
 
   # for testing purposes only, remove on bootable hosts.
   boot.loader.grub.enable = pkgs.lib.mkDefault false;
-  fileSystems."/".device = pkgs.lib.mkDefault "/dev/null";
+  fileSystems."/" = {
+    device = pkgs.lib.mkDefault "/dev/null";
+    fsType = pkgs.lib.mkDefault "ext4";
+  };
 
   system.stateVersion = "25.05"; # initial nixos state
 }
