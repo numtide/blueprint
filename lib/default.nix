@@ -205,17 +205,24 @@ in rec {
           imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform) ];
         };
 
+      # Share the per-system pkgs blueprint already instantiated (with the
+      # configured nixpkgs.config/overlays applied) instead of having the
+      # NixOS/nix-darwin module system import nixpkgs a second time with
+      # the same settings.
+      #
+      # Only injected when blueprint actually has config/overlays to
+      # propagate; otherwise hosts keep full control of their nixpkgs.*
+      # options. mkDefault so a host can still set its own nixpkgs.pkgs.
       nixpkgsConfigModule =
-        { lib, ... }:
-        {
-          nixpkgs =
-            (lib.optionalAttrs ((nixpkgs.config or { }) != { }) {
-              config = nixpkgs.config;
-            })
-            // (lib.optionalAttrs ((nixpkgs.overlays or [ ]) != [ ]) {
-              overlays = nixpkgs.overlays;
-            });
-        };
+        if (nixpkgs.config or { }) == { } && (nixpkgs.overlays or [ ]) == [ ] then
+          { }
+        else
+          (
+            { config, lib, ... }:
+            {
+              nixpkgs.pkgs = lib.mkDefault systemArgs.${config.nixpkgs.hostPlatform.system}.pkgs;
+            }
+          );
 
       home-manager =
         inputs.home-manager
