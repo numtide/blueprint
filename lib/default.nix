@@ -205,6 +205,25 @@ in rec {
           imports = [ (perSystemArgsModule config.nixpkgs.hostPlatform) ];
         };
 
+      # Share the per-system pkgs blueprint already instantiated (with the
+      # configured nixpkgs.config/overlays applied) instead of having the
+      # NixOS/nix-darwin module system import nixpkgs a second time with
+      # the same settings.
+      #
+      # Only injected when blueprint actually has config/overlays to
+      # propagate; otherwise hosts keep full control of their nixpkgs.*
+      # options. mkDefault so a host can still set its own nixpkgs.pkgs.
+      nixpkgsConfigModule =
+        if (nixpkgs.config or { }) == { } && (nixpkgs.overlays or [ ]) == [ ] then
+          { }
+        else
+          (
+            { config, lib, ... }:
+            {
+              nixpkgs.pkgs = lib.mkDefault systemArgs.${config.nixpkgs.hostPlatform.system}.pkgs;
+            }
+          );
+
       home-manager =
         inputs.home-manager
           or (throw ''home configurations require Home Manager. To fix this, add `inputs.home-manager.url = "github:nix-community/home-manager";` to your flake'');
@@ -351,6 +370,7 @@ in rec {
             class = "nixos";
             value = inputs.nixpkgs.lib.nixosSystem {
               modules = [
+                nixpkgsConfigModule
                 perSystemModule
                 path
               ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
@@ -371,6 +391,7 @@ in rec {
               class = "nixos";
               value = nixos-raspberrypi.lib.nixosSystem {
                 modules = [
+                  nixpkgsConfigModule
                   perSystemModule
                   path
                 ]
@@ -393,6 +414,7 @@ in rec {
               class = "nix-darwin";
               value = nix-darwin.lib.darwinSystem {
                 modules = [
+                  nixpkgsConfigModule
                   perSystemModule
                   path
                 ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
