@@ -854,6 +854,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#exposing-packages-as-an-overlay" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exposing packages as an overlay
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#defaultnix-or-top-level-packagenix" class="md-nav__link">
     <span class="md-ellipsis">
       default.nix or top-level package.nix
@@ -1374,6 +1383,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#exposing-packages-as-an-overlay" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exposing packages as an overlay
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#defaultnix-or-top-level-packagenix" class="md-nav__link">
     <span class="md-ellipsis">
       default.nix or top-level package.nix
@@ -1840,6 +1858,37 @@ maps to the "default" package.</p>
 <li><code>checks.&lt;system&gt;.pkgs-&lt;pname&gt;-&lt;tname&gt;</code> - adds all the package <code>passthru.tests</code></li>
 </ul>
 <p>To consume a package inside a host from the same flake, <code>perSystem.self.&lt;pname&gt;</code></p>
+<h4 id="exposing-packages-as-an-overlay">Exposing packages as an overlay</h4>
+<p><code>packages.&lt;system&gt;</code> is built against blueprint's own <code>pkgs</code> (derived from
+<code>inputs.nixpkgs</code> plus any <code>nixpkgs.config</code>/<code>nixpkgs.overlays</code> you set). If a
+consumer applies your packages as a nixpkgs overlay, they usually want them
+built against <em>their</em> nixpkgs instance instead, so that dependencies are
+shared and only one nixpkgs is evaluated.</p>
+<p>For that, blueprint also emits a <code>mkPackagesFor</code> function that re-loads the
+<code>packages/</code> tree against a caller-supplied <code>pkgs</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
+<span class="normal"><a href="#__codelineno-11-2">2</a></span>
+<span class="normal"><a href="#__codelineno-11-3">3</a></span>
+<span class="normal"><a href="#__codelineno-11-4">4</a></span>
+<span class="normal"><a href="#__codelineno-11-5">5</a></span>
+<span class="normal"><a href="#__codelineno-11-6">6</a></span>
+<span class="normal"><a href="#__codelineno-11-7">7</a></span>
+<span class="normal"><a href="#__codelineno-11-8">8</a></span>
+<span class="normal"><a href="#__codelineno-11-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="ss">outputs</span> <span class="o">=</span> inputs<span class="p">:</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2"></a>  <span class="k">let</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3"></a>    <span class="ss">bp</span> <span class="o">=</span> inputs<span class="o">.</span>blueprint <span class="p">{</span> <span class="k">inherit</span> inputs<span class="p">;</span> <span class="p">};</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4"></a>  <span class="k">in</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5"></a>  bp <span class="o">//</span> <span class="p">{</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6"></a>    overlays<span class="o">.</span><span class="ss">default</span> <span class="o">=</span> final<span class="p">:</span> _prev<span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7"></a>      <span class="ss">myproject</span> <span class="o">=</span> bp<span class="o">.</span>mkPackagesFor final<span class="p">;</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8"></a>    <span class="p">};</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9"></a>  <span class="p">};</span>
+</code></pre></div></td></tr></table></div>
+<p>Each package sees the same scope arguments (<code>pkgs</code>, <code>flake</code>, <code>inputs</code>,
+<code>system</code>, <code>perSystem</code>, <code>pname</code>) as in <code>packages.&lt;system&gt;</code>; only <code>pkgs</code> is
+swapped for the overlay's <code>final</code>. <code>perSystem.self</code> resolves within this set,
+so packages that reference each other stay consistent with the caller's
+nixpkgs.</p>
 <h4 id="defaultnix-or-top-level-packagenix"><code>default.nix</code> or top-level <code>package.nix</code></h4>
 <p>Takes the "per-system" arguments. On top of this, it also takes a <code>pname</code> argument.</p>
 <h2 id="checks-for-flake-checks"><strong><code>checks/</code></strong> for flake checks.</h2>
@@ -1872,40 +1921,6 @@ maps to the "default" package.</p>
 <li>Move to the packages folder can create two folders under it: <code>mkdir backend &amp;&amp; mkdir frontend</code>.</li>
 </ol>
 <p>Go into the backend folder, and create a file called <code>default.nix</code> and paste the following into it:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-11-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-11-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-11-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-11-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-11-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-11-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-11-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-11-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-11-10">10</a></span>
-<span class="normal"><a href="#__codelineno-11-11">11</a></span>
-<span class="normal"><a href="#__codelineno-11-12">12</a></span>
-<span class="normal"><a href="#__codelineno-11-13">13</a></span>
-<span class="normal"><a href="#__codelineno-11-14">14</a></span>
-<span class="normal"><a href="#__codelineno-11-15">15</a></span>
-<span class="normal"><a href="#__codelineno-11-16">16</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="p">{</span> pkgs <span class="p">}:</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2"></a>pkgs<span class="o">.</span>mkShell <span class="p">{</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3"></a>  <span class="c1"># Add build dependencies</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4"></a>  <span class="ss">packages</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5"></a>    pkgs<span class="o">.</span>nodejs_23
-<a id="__codelineno-11-6" name="__codelineno-11-6"></a>    pkgs<span class="o">.</span>geany
-<a id="__codelineno-11-7" name="__codelineno-11-7"></a>  <span class="p">];</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8"></a>
-<a id="__codelineno-11-9" name="__codelineno-11-9"></a>  <span class="c1"># Add environment variables</span>
-<a id="__codelineno-11-10" name="__codelineno-11-10"></a>  <span class="ss">env</span> <span class="o">=</span> <span class="p">{</span> <span class="p">};</span>
-<a id="__codelineno-11-11" name="__codelineno-11-11"></a>
-<a id="__codelineno-11-12" name="__codelineno-11-12"></a>  <span class="c1"># Load custom bash code</span>
-<a id="__codelineno-11-13" name="__codelineno-11-13"></a>  <span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
-<a id="__codelineno-11-14" name="__codelineno-11-14"></a><span class="s s-Multiline">    export PS1=&quot;(backend) $PS1&quot;</span>
-<a id="__codelineno-11-15" name="__codelineno-11-15"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
-<a id="__codelineno-11-16" name="__codelineno-11-16"></a><span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-<p>This code will create a devshell that includes node.js and the IDE called Geany. It also  sets the prompt to show the word <code>(backend)</code> as a reminder you're working in the bakcend.  You can use this devshell for backend development.</p>
-<p>Now move over to the <code>frontend</code> folder. Create a file called <code>default.nix</code> and paste the following into it:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-12-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-12-3"> 3</a></span>
@@ -1921,35 +1936,25 @@ maps to the "default" package.</p>
 <span class="normal"><a href="#__codelineno-12-13">13</a></span>
 <span class="normal"><a href="#__codelineno-12-14">14</a></span>
 <span class="normal"><a href="#__codelineno-12-15">15</a></span>
-<span class="normal"><a href="#__codelineno-12-16">16</a></span>
-<span class="normal"><a href="#__codelineno-12-17">17</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="p">{</span> pkgs <span class="p">}:</span>
+<span class="normal"><a href="#__codelineno-12-16">16</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="p">{</span> pkgs <span class="p">}:</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2"></a>pkgs<span class="o">.</span>mkShell <span class="p">{</span>
 <a id="__codelineno-12-3" name="__codelineno-12-3"></a>  <span class="c1"># Add build dependencies</span>
 <a id="__codelineno-12-4" name="__codelineno-12-4"></a>  <span class="ss">packages</span> <span class="o">=</span> <span class="p">[</span>
 <a id="__codelineno-12-5" name="__codelineno-12-5"></a>    pkgs<span class="o">.</span>nodejs_23
 <a id="__codelineno-12-6" name="__codelineno-12-6"></a>    pkgs<span class="o">.</span>geany
-<a id="__codelineno-12-7" name="__codelineno-12-7"></a>    pkgs<span class="o">.</span>nodePackages<span class="o">.</span><span class="s2">&quot;@angular/cli&quot;</span>
-<a id="__codelineno-12-8" name="__codelineno-12-8"></a>  <span class="p">];</span>
-<a id="__codelineno-12-9" name="__codelineno-12-9"></a>
-<a id="__codelineno-12-10" name="__codelineno-12-10"></a>  <span class="c1"># Add environment variables</span>
-<a id="__codelineno-12-11" name="__codelineno-12-11"></a>  <span class="ss">env</span> <span class="o">=</span> <span class="p">{</span> <span class="p">};</span>
-<a id="__codelineno-12-12" name="__codelineno-12-12"></a>
-<a id="__codelineno-12-13" name="__codelineno-12-13"></a>  <span class="c1"># Load custom bash code</span>
-<a id="__codelineno-12-14" name="__codelineno-12-14"></a>  <span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
-<a id="__codelineno-12-15" name="__codelineno-12-15"></a><span class="s s-Multiline">    export PS1=&quot;(frontend) $PS1&quot;</span>
-<a id="__codelineno-12-16" name="__codelineno-12-16"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
-<a id="__codelineno-12-17" name="__codelineno-12-17"></a><span class="p">}</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7"></a>  <span class="p">];</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8"></a>
+<a id="__codelineno-12-9" name="__codelineno-12-9"></a>  <span class="c1"># Add environment variables</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10"></a>  <span class="ss">env</span> <span class="o">=</span> <span class="p">{</span> <span class="p">};</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11"></a>
+<a id="__codelineno-12-12" name="__codelineno-12-12"></a>  <span class="c1"># Load custom bash code</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13"></a>  <span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14"></a><span class="s s-Multiline">    export PS1=&quot;(backend) $PS1&quot;</span>
+<a id="__codelineno-12-15" name="__codelineno-12-15"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
+<a id="__codelineno-12-16" name="__codelineno-12-16"></a><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
-<p>This is similar to the backend, but you'll notice it also includes the CLI tools for Angular for frontend development. This code also sets the prompt to say <code>(frontend)</code> to remind you you're working in the front end.</p>
-<p>Save both files and move to the root folder of the project.</p>
-<p>Now you can invoke either development shell by typing one of the following:</p>
-<ul>
-<li><code>nix develop .#backend</code> to launch the back end shell</li>
-<li><code>nix develop .#frontend</code> to launch the front end shell</li>
-</ul>
-<h1 id="example-hosts-and-modules">Example Hosts and Modules</h1>
-<p>This example comes from one of our available templates called <a href="../built_in_templates/#nixos-and-darwin-shared-homes-template">NixOS and Darwin Shared Homes Template</a>.</p>
-<p>Here we create two Blueprint folders, hosts and modules with the following subfolders:</p>
+<p>This code will create a devshell that includes node.js and the IDE called Geany. It also  sets the prompt to show the word <code>(backend)</code> as a reminder you're working in the bakcend.  You can use this devshell for backend development.</p>
+<p>Now move over to the <code>frontend</code> folder. Create a file called <code>default.nix</code> and paste the following into it:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-13-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-13-3"> 3</a></span>
@@ -1966,116 +1971,160 @@ maps to the "default" package.</p>
 <span class="normal"><a href="#__codelineno-13-14">14</a></span>
 <span class="normal"><a href="#__codelineno-13-15">15</a></span>
 <span class="normal"><a href="#__codelineno-13-16">16</a></span>
-<span class="normal"><a href="#__codelineno-13-17">17</a></span>
-<span class="normal"><a href="#__codelineno-13-18">18</a></span>
-<span class="normal"><a href="#__codelineno-13-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1"></a>root folder
-<a id="__codelineno-13-2" name="__codelineno-13-2"></a>├── flake.nix
-<a id="__codelineno-13-3" name="__codelineno-13-3"></a>├── hosts
-<a id="__codelineno-13-4" name="__codelineno-13-4"></a>│   ├── my-darwin
-<a id="__codelineno-13-5" name="__codelineno-13-5"></a>│   │   ├── darwin-configuration.nix
-<a id="__codelineno-13-6" name="__codelineno-13-6"></a>│   │   └── users
-<a id="__codelineno-13-7" name="__codelineno-13-7"></a>│   │       └── me
-<a id="__codelineno-13-8" name="__codelineno-13-8"></a>│   │           └── home-configuration.nix
-<a id="__codelineno-13-9" name="__codelineno-13-9"></a>│   └── my-nixos
-<a id="__codelineno-13-10" name="__codelineno-13-10"></a>│       ├── configuration.nix
-<a id="__codelineno-13-11" name="__codelineno-13-11"></a>│       └── users
-<a id="__codelineno-13-12" name="__codelineno-13-12"></a>│           └── me
-<a id="__codelineno-13-13" name="__codelineno-13-13"></a>│               └── home-configuration.nix
-<a id="__codelineno-13-14" name="__codelineno-13-14"></a>├── modules
-<a id="__codelineno-13-15" name="__codelineno-13-15"></a>│   ├── home
-<a id="__codelineno-13-16" name="__codelineno-13-16"></a>│   │   └── home-shared.nix
-<a id="__codelineno-13-17" name="__codelineno-13-17"></a>│   └── nixos
-<a id="__codelineno-13-18" name="__codelineno-13-18"></a>│       └── host-shared.nix
-<a id="__codelineno-13-19" name="__codelineno-13-19"></a>└── README.md
+<span class="normal"><a href="#__codelineno-13-17">17</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="p">{</span> pkgs <span class="p">}:</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2"></a>pkgs<span class="o">.</span>mkShell <span class="p">{</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3"></a>  <span class="c1"># Add build dependencies</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4"></a>  <span class="ss">packages</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5"></a>    pkgs<span class="o">.</span>nodejs_23
+<a id="__codelineno-13-6" name="__codelineno-13-6"></a>    pkgs<span class="o">.</span>geany
+<a id="__codelineno-13-7" name="__codelineno-13-7"></a>    pkgs<span class="o">.</span>nodePackages<span class="o">.</span><span class="s2">&quot;@angular/cli&quot;</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8"></a>  <span class="p">];</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9"></a>
+<a id="__codelineno-13-10" name="__codelineno-13-10"></a>  <span class="c1"># Add environment variables</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11"></a>  <span class="ss">env</span> <span class="o">=</span> <span class="p">{</span> <span class="p">};</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12"></a>
+<a id="__codelineno-13-13" name="__codelineno-13-13"></a>  <span class="c1"># Load custom bash code</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14"></a>  <span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15"></a><span class="s s-Multiline">    export PS1=&quot;(frontend) $PS1&quot;</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17"></a><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<p>This is similar to the backend, but you'll notice it also includes the CLI tools for Angular for frontend development. This code also sets the prompt to say <code>(frontend)</code> to remind you you're working in the front end.</p>
+<p>Save both files and move to the root folder of the project.</p>
+<p>Now you can invoke either development shell by typing one of the following:</p>
+<ul>
+<li><code>nix develop .#backend</code> to launch the back end shell</li>
+<li><code>nix develop .#frontend</code> to launch the front end shell</li>
+</ul>
+<h1 id="example-hosts-and-modules">Example Hosts and Modules</h1>
+<p>This example comes from one of our available templates called <a href="../built_in_templates/#nixos-and-darwin-shared-homes-template">NixOS and Darwin Shared Homes Template</a>.</p>
+<p>Here we create two Blueprint folders, hosts and modules with the following subfolders:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-14-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-14-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-14-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-14-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-14-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-14-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-14-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-14-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-14-10">10</a></span>
+<span class="normal"><a href="#__codelineno-14-11">11</a></span>
+<span class="normal"><a href="#__codelineno-14-12">12</a></span>
+<span class="normal"><a href="#__codelineno-14-13">13</a></span>
+<span class="normal"><a href="#__codelineno-14-14">14</a></span>
+<span class="normal"><a href="#__codelineno-14-15">15</a></span>
+<span class="normal"><a href="#__codelineno-14-16">16</a></span>
+<span class="normal"><a href="#__codelineno-14-17">17</a></span>
+<span class="normal"><a href="#__codelineno-14-18">18</a></span>
+<span class="normal"><a href="#__codelineno-14-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1"></a>root folder
+<a id="__codelineno-14-2" name="__codelineno-14-2"></a>├── flake.nix
+<a id="__codelineno-14-3" name="__codelineno-14-3"></a>├── hosts
+<a id="__codelineno-14-4" name="__codelineno-14-4"></a>│   ├── my-darwin
+<a id="__codelineno-14-5" name="__codelineno-14-5"></a>│   │   ├── darwin-configuration.nix
+<a id="__codelineno-14-6" name="__codelineno-14-6"></a>│   │   └── users
+<a id="__codelineno-14-7" name="__codelineno-14-7"></a>│   │       └── me
+<a id="__codelineno-14-8" name="__codelineno-14-8"></a>│   │           └── home-configuration.nix
+<a id="__codelineno-14-9" name="__codelineno-14-9"></a>│   └── my-nixos
+<a id="__codelineno-14-10" name="__codelineno-14-10"></a>│       ├── configuration.nix
+<a id="__codelineno-14-11" name="__codelineno-14-11"></a>│       └── users
+<a id="__codelineno-14-12" name="__codelineno-14-12"></a>│           └── me
+<a id="__codelineno-14-13" name="__codelineno-14-13"></a>│               └── home-configuration.nix
+<a id="__codelineno-14-14" name="__codelineno-14-14"></a>├── modules
+<a id="__codelineno-14-15" name="__codelineno-14-15"></a>│   ├── home
+<a id="__codelineno-14-16" name="__codelineno-14-16"></a>│   │   └── home-shared.nix
+<a id="__codelineno-14-17" name="__codelineno-14-17"></a>│   └── nixos
+<a id="__codelineno-14-18" name="__codelineno-14-18"></a>│       └── host-shared.nix
+<a id="__codelineno-14-19" name="__codelineno-14-19"></a>└── README.md
 </code></pre></div></td></tr></table></div>
 <p>If you run the above command, this is the set of files you'll get. Take a look at the difference between darwin-configuration.nix under hosts/my-darwin and configuration.nix under hosts/my-nixos.</p>
 <h1 id="example-checks">Example Checks</h1>
 <p>Let's look at how you can put individual tests in the checks folder.</p>
 <p>Start by creating a new folder and initializing the Flake with Blueprint:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1"></a>nix flake init -t github:numtide/blueprint
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1"></a>nix flake init -t github:numtide/blueprint
 </code></pre></div></td></tr></table></div>
 <p>Then create a folder called src, and another folder next to it called checks.</p>
 <p>In the src folder, create three python files:</p>
 <ol>
 <li>main.py</li>
 </ol>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span>
-<span class="normal"><a href="#__codelineno-15-2">2</a></span>
-<span class="normal"><a href="#__codelineno-15-3">3</a></span>
-<span class="normal"><a href="#__codelineno-15-4">4</a></span>
-<span class="normal"><a href="#__codelineno-15-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">string_length</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2"></a>
-<a id="__codelineno-15-3" name="__codelineno-15-3"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4"></a>    <span class="n">test_str</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span>
-<a id="__codelineno-15-5" name="__codelineno-15-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Length of &#39;</span><span class="si">{</span><span class="n">test_str</span><span class="si">}</span><span class="s2">&#39; is </span><span class="si">{</span><span class="n">string_length</span><span class="p">(</span><span class="n">test_str</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
+<span class="normal"><a href="#__codelineno-16-2">2</a></span>
+<span class="normal"><a href="#__codelineno-16-3">3</a></span>
+<span class="normal"><a href="#__codelineno-16-4">4</a></span>
+<span class="normal"><a href="#__codelineno-16-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">string_length</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2"></a>
+<a id="__codelineno-16-3" name="__codelineno-16-3"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4"></a>    <span class="n">test_str</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Length of &#39;</span><span class="si">{</span><span class="n">test_str</span><span class="si">}</span><span class="s2">&#39; is </span><span class="si">{</span><span class="n">string_length</span><span class="p">(</span><span class="n">test_str</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <ol>
 <li>utils.py</li>
 </ol>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
-<span class="normal"><a href="#__codelineno-16-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">string_length</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2"></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1">1</a></span>
+<span class="normal"><a href="#__codelineno-17-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">string_length</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2"></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <p>(As you can see, we're keeping this incredibly simple for demonstration purposes.)</p>
 <ol>
 <li>test_length.py</li>
 </ol>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1">1</a></span>
-<span class="normal"><a href="#__codelineno-17-2">2</a></span>
-<span class="normal"><a href="#__codelineno-17-3">3</a></span>
-<span class="normal"><a href="#__codelineno-17-4">4</a></span>
-<span class="normal"><a href="#__codelineno-17-5">5</a></span>
-<span class="normal"><a href="#__codelineno-17-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">string_length</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2"></a>
-<a id="__codelineno-17-3" name="__codelineno-17-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_string_length</span><span class="p">():</span>
-<a id="__codelineno-17-4" name="__codelineno-17-4"></a>    <span class="k">assert</span> <span class="n">string_length</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span>
-<a id="__codelineno-17-5" name="__codelineno-17-5"></a>    <span class="k">assert</span> <span class="n">string_length</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
-<a id="__codelineno-17-6" name="__codelineno-17-6"></a>    <span class="k">assert</span> <span class="n">string_length</span><span class="p">(</span><span class="s2">&quot;squirrel!&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">8</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1">1</a></span>
+<span class="normal"><a href="#__codelineno-18-2">2</a></span>
+<span class="normal"><a href="#__codelineno-18-3">3</a></span>
+<span class="normal"><a href="#__codelineno-18-4">4</a></span>
+<span class="normal"><a href="#__codelineno-18-5">5</a></span>
+<span class="normal"><a href="#__codelineno-18-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">string_length</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2"></a>
+<a id="__codelineno-18-3" name="__codelineno-18-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_string_length</span><span class="p">():</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4"></a>    <span class="k">assert</span> <span class="n">string_length</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5"></a>    <span class="k">assert</span> <span class="n">string_length</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6"></a>    <span class="k">assert</span> <span class="n">string_length</span><span class="p">(</span><span class="s2">&quot;squirrel!&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">8</span>
 </code></pre></div></td></tr></table></div>
 <p>Next, in the checks folder, create a file called test.nix. (Really you can call it anything you want, as long as it has a nix extension.) And place the following in it:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-18-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-18-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-18-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-18-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-18-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-18-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-18-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-18-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-18-10">10</a></span>
-<span class="normal"><a href="#__codelineno-18-11">11</a></span>
-<span class="normal"><a href="#__codelineno-18-12">12</a></span>
-<span class="normal"><a href="#__codelineno-18-13">13</a></span>
-<span class="normal"><a href="#__codelineno-18-14">14</a></span>
-<span class="normal"><a href="#__codelineno-18-15">15</a></span>
-<span class="normal"><a href="#__codelineno-18-16">16</a></span>
-<span class="normal"><a href="#__codelineno-18-17">17</a></span>
-<span class="normal"><a href="#__codelineno-18-18">18</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="p">{</span> pkgs<span class="p">,</span> system<span class="p">,</span> <span class="o">...</span> <span class="p">}:</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2"></a>
-<a id="__codelineno-18-3" name="__codelineno-18-3"></a><span class="k">let</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4"></a>  <span class="ss">pythonEnv</span> <span class="o">=</span> pkgs<span class="o">.</span>python3<span class="o">.</span>withPackages <span class="p">(</span>ps<span class="p">:</span> <span class="k">with</span> ps<span class="p">;</span> <span class="p">[</span> pytest <span class="p">]);</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5"></a><span class="k">in</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6"></a>pkgs<span class="o">.</span>runCommand <span class="s2">&quot;string-length-test&quot;</span>
-<a id="__codelineno-18-7" name="__codelineno-18-7"></a>  <span class="p">{</span>
-<a id="__codelineno-18-8" name="__codelineno-18-8"></a>    <span class="ss">buildInputs</span> <span class="o">=</span> <span class="p">[</span> pythonEnv <span class="p">];</span>
-<a id="__codelineno-18-9" name="__codelineno-18-9"></a>    <span class="ss">src</span> <span class="o">=</span> <span class="l">./../src</span><span class="p">;</span>
-<a id="__codelineno-18-10" name="__codelineno-18-10"></a>  <span class="p">}</span> <span class="s s-Multiline">&#39;&#39;</span>
-<a id="__codelineno-18-11" name="__codelineno-18-11"></a><span class="s s-Multiline">    cp -r $src/* .</span>
-<a id="__codelineno-18-12" name="__codelineno-18-12"></a><span class="s s-Multiline">    # Run pytest, save output to file</span>
-<a id="__codelineno-18-13" name="__codelineno-18-13"></a><span class="s s-Multiline">    if ! pytest &gt; result.log 2&gt;&amp;1; then</span>
-<a id="__codelineno-18-14" name="__codelineno-18-14"></a><span class="s s-Multiline">      cat result.log &gt;&amp;2  # dump the error to stderr so nix shows it</span>
-<a id="__codelineno-18-15" name="__codelineno-18-15"></a><span class="s s-Multiline">      exit 1</span>
-<a id="__codelineno-18-16" name="__codelineno-18-16"></a><span class="s s-Multiline">    fi</span>
-<a id="__codelineno-18-17" name="__codelineno-18-17"></a><span class="s s-Multiline">    touch $out</span>
-<a id="__codelineno-18-18" name="__codelineno-18-18"></a><span class="s s-Multiline">  &#39;&#39;</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-19-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-19-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-19-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-19-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-19-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-19-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-19-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-19-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-19-10">10</a></span>
+<span class="normal"><a href="#__codelineno-19-11">11</a></span>
+<span class="normal"><a href="#__codelineno-19-12">12</a></span>
+<span class="normal"><a href="#__codelineno-19-13">13</a></span>
+<span class="normal"><a href="#__codelineno-19-14">14</a></span>
+<span class="normal"><a href="#__codelineno-19-15">15</a></span>
+<span class="normal"><a href="#__codelineno-19-16">16</a></span>
+<span class="normal"><a href="#__codelineno-19-17">17</a></span>
+<span class="normal"><a href="#__codelineno-19-18">18</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1"></a><span class="p">{</span> pkgs<span class="p">,</span> system<span class="p">,</span> <span class="o">...</span> <span class="p">}:</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3"></a><span class="k">let</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4"></a>  <span class="ss">pythonEnv</span> <span class="o">=</span> pkgs<span class="o">.</span>python3<span class="o">.</span>withPackages <span class="p">(</span>ps<span class="p">:</span> <span class="k">with</span> ps<span class="p">;</span> <span class="p">[</span> pytest <span class="p">]);</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5"></a><span class="k">in</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6"></a>pkgs<span class="o">.</span>runCommand <span class="s2">&quot;string-length-test&quot;</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7"></a>  <span class="p">{</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8"></a>    <span class="ss">buildInputs</span> <span class="o">=</span> <span class="p">[</span> pythonEnv <span class="p">];</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9"></a>    <span class="ss">src</span> <span class="o">=</span> <span class="l">./../src</span><span class="p">;</span>
+<a id="__codelineno-19-10" name="__codelineno-19-10"></a>  <span class="p">}</span> <span class="s s-Multiline">&#39;&#39;</span>
+<a id="__codelineno-19-11" name="__codelineno-19-11"></a><span class="s s-Multiline">    cp -r $src/* .</span>
+<a id="__codelineno-19-12" name="__codelineno-19-12"></a><span class="s s-Multiline">    # Run pytest, save output to file</span>
+<a id="__codelineno-19-13" name="__codelineno-19-13"></a><span class="s s-Multiline">    if ! pytest &gt; result.log 2&gt;&amp;1; then</span>
+<a id="__codelineno-19-14" name="__codelineno-19-14"></a><span class="s s-Multiline">      cat result.log &gt;&amp;2  # dump the error to stderr so nix shows it</span>
+<a id="__codelineno-19-15" name="__codelineno-19-15"></a><span class="s s-Multiline">      exit 1</span>
+<a id="__codelineno-19-16" name="__codelineno-19-16"></a><span class="s s-Multiline">    fi</span>
+<a id="__codelineno-19-17" name="__codelineno-19-17"></a><span class="s s-Multiline">    touch $out</span>
+<a id="__codelineno-19-18" name="__codelineno-19-18"></a><span class="s s-Multiline">  &#39;&#39;</span>
 </code></pre></div></td></tr></table></div>
 <p>Now run:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1"></a>nix flake check
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1"></a>nix flake check
 </code></pre></div></td></tr></table></div>
 <p>And your test will run. Because it's correct, you won't see any output. So perhaps try adjusting the function to make it purposely return the wrong number:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1">1</a></span>
-<span class="normal"><a href="#__codelineno-20-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">string_length</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2"></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">1</a></span>
+<span class="normal"><a href="#__codelineno-21-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">string_length</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2"></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 </code></pre></div></td></tr></table></div>
 <p>Then when you run <code>nix flake check</code> you should see the output from the pytest tool.</p>
 <blockquote>
