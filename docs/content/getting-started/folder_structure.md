@@ -387,6 +387,35 @@ Flake outputs:
 
 To consume a package inside a host from the same flake, `perSystem.self.<pname>`
 
+#### Exposing packages as an overlay
+
+`packages.<system>` is built against blueprint's own `pkgs` (derived from
+`inputs.nixpkgs` plus any `nixpkgs.config`/`nixpkgs.overlays` you set). If a
+consumer applies your packages as a nixpkgs overlay, they usually want them
+built against *their* nixpkgs instance instead, so that dependencies are
+shared and only one nixpkgs is evaluated.
+
+For that, blueprint also emits a `mkPackagesFor` function that re-loads the
+`packages/` tree against a caller-supplied `pkgs`:
+
+```nix
+outputs = inputs:
+  let
+    bp = inputs.blueprint { inherit inputs; };
+  in
+  bp // {
+    overlays.default = final: _prev: {
+      myproject = bp.mkPackagesFor final;
+    };
+  };
+```
+
+Each package sees the same scope arguments (`pkgs`, `flake`, `inputs`,
+`system`, `perSystem`, `pname`) as in `packages.<system>`; only `pkgs` is
+swapped for the overlay's `final`. `perSystem.self` resolves within this set,
+so packages that reference each other stay consistent with the caller's
+nixpkgs.
+
 #### `default.nix` or top-level `package.nix`
 
 Takes the "per-system" arguments. On top of this, it also takes a `pname` argument.
