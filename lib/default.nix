@@ -33,15 +33,10 @@ in rec {
       systemArgs = lib.genAttrs systems (
         system:
         let
-          # Resolve the packages for each input.
-          perSystem = lib.mapAttrs (
-            name: flake:
-            # For self, we need to treat packages differently, see above
-            if name == "self" then
-              flake.legacyPackages.${system} or { } // unfilteredPackages.${system}
-            else
-              flake.legacyPackages.${system} or { } // flake.packages.${system} or { }
-          ) inputs;
+          perSystem = mkPerSystem {
+            inherit inputs system;
+            selfPackages = unfilteredPackages.${system};
+          };
 
           # Handle nixpkgs specially.
           pkgs =
@@ -143,6 +138,24 @@ in rec {
         value = value;
       }
     );
+
+  # Resolve perSystem.<input> for every flake input. For inputs.self,
+  # `selfPackages` is merged instead of `self.packages.${system}` so the
+  # caller can break the packages → filterPlatforms → perSystem.self
+  # → packages cycle (see the comment on `unfilteredPackages` in
+  # mkEachSystem) and, in the overlay case, point intra-set references
+  # at the set built against the caller's nixpkgs.
+  mkPerSystem =
+    {
+      inputs,
+      system,
+      selfPackages,
+    }:
+    lib.mapAttrs (
+      name: input:
+      (input.legacyPackages.${system} or { })
+      // (if name == "self" then selfPackages else input.packages.${system} or { })
+    ) inputs;
 
   filterPlatforms =
     system: attrs:
@@ -507,29 +520,56 @@ in rec {
           )
         );
 
+      packageEntries =
+        (optionalPathAttrs (src + "/packages") (path: importDir path lib.id))
+        // (optionalPathAttrs (src + "/package.nix") (path: {
+          default = {
+            inherit path;
+          };
+        }))
+        // (optionalPathAttrs (src + "/formatter.nix") (path: {
+          formatter = {
+            inherit path;
+          };
+        }));
+
       # See the comment in mkEachSystem
       unfilteredPackages =
         lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
-          (
-            let
-              entries =
-                (optionalPathAttrs (src + "/packages") (path: importDir path lib.id))
-                // (optionalPathAttrs (src + "/package.nix") (path: {
-                  default = {
-                    inherit path;
-                  };
-                }))
-                // (optionalPathAttrs (src + "/formatter.nix") (path: {
-                  formatter = {
-                    inherit path;
-                  };
-                }));
-            in
-            eachSystem (
-              { newScope, system, ... }:
-              lib.mapAttrs (pname: { path, ... }: newScope { inherit pname; } path { }) entries
-            )
-          );
+          (eachSystem ({ pkgs, ... }: mkPackagesFor pkgs));
+
+      # Load the packages/ tree against a given nixpkgs instance.
+      # Packages get the same scope arguments as via systemArgs (pkgs,
+      # flake, inputs, system, perSystem, pname). perSystem.self resolves
+      # within this scope so intra-set references stay consistent with
+      # the supplied nixpkgs.
+      #
+      # Used internally for packages.<system> (with blueprint's own
+      # pkgs) and exposed so consumers can build an overlay that uses
+      # their pkgs instead.
+      mkPackagesFor =
+        pkgs:
+        let
+          system = pkgs.stdenv.hostPlatform.system;
+          scope = lib.makeScope lib.callPackageWith (self: {
+            inherit
+              inputs
+              flake
+              pkgs
+              system
+              ;
+            perSystem = mkPerSystem {
+              inherit inputs system;
+              selfPackages = self.packageSet;
+            };
+            # NB: lib.makeScope reserves `packages` for its generator
+            # function, so the result lives under a different name.
+            packageSet = lib.mapAttrs (
+              pname: { path, ... }: self.newScope { inherit pname; } path { }
+            ) packageEntries;
+          });
+        in
+        scope.packageSet;
     in
     # FIXME: maybe there are two layers to this. The blueprint, and then the mapping to flake outputs.
     {
@@ -622,6 +662,8 @@ in rec {
 
       # See the comment in mkEachSystem
       packages = lib.mapAttrs filterPlatforms unfilteredPackages;
+
+      inherit mkPackagesFor;
 
       # Defining homeConfigurations under legacyPackages allows the home-manager CLI
       # to automatically detect the right output for the current system without
