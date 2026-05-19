@@ -600,7 +600,15 @@ in rec {
         perSystem.self.formatter or pkgs.nixfmt-tree
       );
 
-      lib = tryImport (src + "/lib") specialArgs;
+      lib =
+        let
+          # Load all lib/{*,*/default}.nix files
+          fullLib = importDir (src + "/lib") (lib.mapAttrs (
+            _name: {path, ...}: tryImport path specialArgs
+          ));
+        in
+        # Merge: lib/default.nix takes precedence, then add auto-imported files
+        lib.removeAttrs fullLib ["default"] // fullLib.default or {};
 
       # expose the functor to the top-level
       # FIXME: only if it exists
