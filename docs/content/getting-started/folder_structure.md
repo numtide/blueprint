@@ -324,25 +324,74 @@ Because the username is part of the path to the configuration, the `home.usernam
 
 ## **lib/** for Nix functions.
 
-### `lib/default.nix`
+All `<name>.nix` and `<name>/default.nix` files in `lib/` are automatically imported and exposed as `lib.<name>`.
 
-Loaded if it exists.
+### Structure
 
-Inputs:
+```
+lib/
+├── default.nix         # Optional: merged into lib
+├── firstChar.nix       # Available as lib.firstChar
+├── math/
+├────── default.nix     # Available as lib.math
+└────── add.nix         # No magic here
+```
 
-* `flake`
-* `inputs`
-
-Flake outputs:
-
-* `lib` - contains the return value of `lib/default.nix`
-
-Eg:
+### Examples
 
 ```nix
-{ flake, inputs }:
-{ }
+# lib/default.nix - Merged into lib
+{ inputs, flake, ... }: {
+  greet = name: "Hello, ${name}! Flake in ${flake}";
+}
+
+# lib/firstChar.nix - Inline function
+_blueprintArgs: phrase: builtins.substring 0 1 phrase
+
+# lib/math/default.nix - Attrset of functions
+{ inputs, flake, ... }:
+{
+  add = import ./add.nix;
+  substract = a: b: a - b;
+}
+
+# lib/math/add.nix - Simple function, directly imported
+a: b: a + b
 ```
+
+### Usage
+
+```nix
+inputs.myflake.lib.firstChar "hello"    # => "h"
+inputs.myflake.lib.greet "World"        # => "Hello, World! Flake in /nix/store/...-source"
+inputs.myflake.lib.math.add 1 2         # => 3
+inputs.myflake.lib.math.substract 5 3   # => 2
+```
+
+Files will always receive `{ inputs, flake, ... }` as a starting input.
+
+`lib/default.nix` exports are merged and take precedence over auto-imported files.
+
+### Testing
+
+Export a `tests` attribute from your `lib/` to run [nix-unit](https://github.com/nix-community/nix-unit) tests:
+
+```nix
+# lib/default.nix
+{ inputs, flake, ... }:
+{
+  add = a: b: a + b;
+  
+  tests = {
+    testAdd = {
+      expr = (import ./default.nix { inherit inputs flake; }).add 1 2;
+      expected = 3;
+    };
+  };
+}
+```
+
+Tests run automatically with `nix flake check` as `checks.<system>.lib-tests`.
 
 ## **`modules/`** for NixOS and other modules.
 
