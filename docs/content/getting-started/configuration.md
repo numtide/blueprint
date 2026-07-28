@@ -37,7 +37,7 @@ Then, you can add a `nix` folder inside the same folder that holds your flake fi
 
 Defines for which systems the project should be used and deployed on.
 
-Default: it will load the `inputs.systems` flake input, first from the current flake, and then fallback to the blueprint one. (see <https://github.com/nix-systems/default>).
+Default: it will load the `inputs.systems` flake input, first from the current flake, and then fallback to the blueprint one. (see <https://github.com/nix-systems/triplet>).
 
 Type: list of `<arch>-<kernel>` strings.
 
