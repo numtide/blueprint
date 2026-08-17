@@ -1,13 +1,49 @@
 { inputs, ... }:
-# A bunch of helper utilities for the project
+# A bunch of helper utilities for the Blueprint project
 let
   bpInputs = inputs;
   nixpkgs = bpInputs.nixpkgs;
   lib = nixpkgs.lib;
-in rec {
-  # A generator for the top-level attributes of the flake.
-  #
-  # Designed to work with https://github.com/nix-systems
+in
+rec {
+  /**
+    Generate the top-level per-system attributes for a flake.
+
+    Designed to work with https://github.com/nix-systems.
+
+    This function memoises per-system arguments in `systemArgs` and exposes an
+    `eachSystem` helper that maps a callback over all supported systems.
+
+    # Type
+
+    ```
+    mkEachSystem :: {
+      inputs :: AttrSet,
+      flake :: AttrSet,
+      systems :: [ String ],
+      nixpkgs :: { config :: AttrSet; overlays :: [ Overlay ]; },
+      unfilteredPackages :: AttrSet,
+    } -> { systemArgs :: AttrSet; eachSystem :: (AttrSet -> AttrSet) -> AttrSet; }
+    ```
+
+    # Arguments
+
+    inputs
+    : The flake inputs.
+
+    flake
+    : The current flake (`inputs.self`).
+
+    systems
+    : List of supported systems.
+
+    nixpkgs
+    : nixpkgs configuration (`config` and/or `overlays`).
+
+    unfilteredPackages
+    : Per-system package set, used to break the `perSystem` ↔ `packages`
+      infinite recursion.
+  */
   mkEachSystem =
     {
       inputs,
@@ -66,12 +102,63 @@ in rec {
       inherit systemArgs eachSystem;
     };
 
+  /**
+    Apply `f` to `path` if it exists, returning an empty attribute set otherwise.
+
+    # Type
+
+    ```
+    optionalPathAttrs :: Path -> (Path -> AttrSet) -> AttrSet
+    ```
+
+    # Arguments
+
+    path
+    : The filesystem path to check.
+
+    f
+    : Function called with `path` when it exists.
+  */
   optionalPathAttrs = path: f: lib.optionalAttrs (builtins.pathExists path) (f path);
 
-  # Imports the path and pass the `args` to it if it exists, otherwise, return an empty attrset.
+  /**
+    Import `path` with `args` if it exists, returning an empty attribute set otherwise.
+
+    # Type
+
+    ```
+    tryImport :: Path -> AttrSet -> AttrSet
+    ```
+
+    # Arguments
+
+    path
+    : The Nix file to import.
+
+    args
+    : The attribute set passed to the imported expression.
+  */
   tryImport = path: args: optionalPathAttrs path (path: import path args);
 
-  # Maps all the toml files in a directory to name -> path.
+  /**
+    Map every `.toml` file in `path` to a name -> { path, type } attribute set.
+
+    Names are derived from the basename without the `.toml` extension.
+
+    # Type
+
+    ```
+    importTomlFilesAt :: Path -> (AttrSet -> AttrSet) -> AttrSet
+    ```
+
+    # Arguments
+
+    path
+    : The directory to scan.
+
+    fn
+    : Callback that receives the resulting attribute set.
+  */
   importTomlFilesAt =
     path: fn:
     let
@@ -94,7 +181,27 @@ in rec {
     in
     lib.optionalAttrs (builtins.pathExists path) (fn nixPaths);
 
-  # Maps all the nix files and folders in a directory to name -> path.
+  /**
+    Map Nix files and directories in `path` to a name -> { path, type } attribute set.
+
+    Directories are included as-is. Regular `.nix` files are keyed by their
+    basename without the `.nix` extension and take precedence over a directory
+    with the same name.
+
+    # Type
+
+    ```
+    importDir :: Path -> (AttrSet -> AttrSet) -> AttrSet
+    ```
+
+    # Arguments
+
+    path
+    : The directory to scan.
+
+    fn
+    : Callback that receives the resulting attribute set.
+  */
   importDir =
     path: fn:
     let
@@ -127,9 +234,33 @@ in rec {
     in
     lib.optionalAttrs (builtins.pathExists path) (fn combined);
 
+  /**
+    Extract just the `path` value from an attribute set of `{ path, type }` entries.
+
+    Useful as the callback for `importDir` when only the path is needed.
+
+    # Type
+
+    ```
+    entriesPath :: AttrSet -> AttrSet
+    ```
+  */
   entriesPath = lib.mapAttrs (_name: { path, type }: path);
 
-  # Prefixes all the keys of an attrset with the given prefix
+  /**
+    Prefix every key of an attribute set with `prefix`.
+
+    # Type
+
+    ```
+    withPrefix :: String -> AttrSet -> AttrSet
+    ```
+
+    # Arguments
+
+    prefix
+    : String prepended to each key.
+  */
   withPrefix =
     prefix:
     lib.mapAttrs' (
@@ -139,12 +270,37 @@ in rec {
       }
     );
 
-  # Resolve perSystem.<input> for every flake input. For inputs.self,
-  # `selfPackages` is merged instead of `self.packages.${system}` so the
-  # caller can break the packages → filterPlatforms → perSystem.self
-  # → packages cycle (see the comment on `unfilteredPackages` in
-  # mkEachSystem) and, in the overlay case, point intra-set references
-  # at the set built against the caller's nixpkgs.
+  /**
+    Resolve `perSystem.<input>` for every flake input.
+
+    For `inputs.self`, `selfPackages` is merged instead of
+    `self.packages.${system}` so the caller can break the
+    `packages → filterPlatforms → perSystem.self → packages` cycle
+    (see the comment on `unfilteredPackages` in `mkEachSystem`) and,
+    in the overlay case, point intra-set references at the set built
+    against the caller's nixpkgs.
+
+    # Type
+
+    ```
+    mkPerSystem :: {
+      inputs :: AttrSet,
+      system :: String,
+      selfPackages :: AttrSet,
+    } -> AttrSet
+    ```
+
+    # Arguments
+
+    inputs
+    : The flake inputs.
+
+    system
+    : The system to resolve for.
+
+    selfPackages
+    : The package set used for `inputs.self`.
+  */
   mkPerSystem =
     {
       inputs,
@@ -157,6 +313,25 @@ in rec {
       // (if name == "self" then selfPackages else input.packages.${system} or { })
     ) inputs;
 
+  /**
+    Filter an attribute set of derivations to those that support `system`.
+
+    Derivations without `meta.platforms` are kept unconditionally.
+
+    # Type
+
+    ```
+    filterPlatforms :: String -> AttrSet -> AttrSet
+    ```
+
+    # Arguments
+
+    system
+    : The platform to keep packages for.
+
+    attrs
+    : The attribute set of derivations to filter.
+  */
   filterPlatforms =
     system: attrs:
     lib.filterAttrs (
@@ -167,6 +342,42 @@ in rec {
         lib.elem system x.meta.platforms
     ) attrs;
 
+  /**
+    Internal implementation of `mkBlueprint`.
+
+    Builds the complete set of flake outputs from the project folder structure
+    under `src`. Use `mkBlueprint` instead unless you need to override internal
+    wiring.
+
+    # Type
+
+    ```
+    mkBlueprint' :: {
+      inputs :: AttrSet,
+      nixpkgs :: AttrSet,
+      flake :: AttrSet,
+      src :: Path,
+      systems :: [ String ],
+    } -> AttrSet
+    ```
+
+    # Arguments
+
+    inputs
+    : The flake inputs.
+
+    nixpkgs
+    : nixpkgs configuration (`config` and/or `overlays`).
+
+    flake
+    : The current flake (`inputs.self`).
+
+    src
+    : The project source path.
+
+    systems
+    : List of supported systems.
+  */
   mkBlueprint' =
     {
       inputs,
@@ -386,7 +597,8 @@ in rec {
                 nixpkgsConfigModule
                 perSystemModule
                 path
-              ] ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
+              ]
+              ++ mkHomeUsersModule hostName home-manager.nixosModules.default;
               specialArgs = specialArgs // {
                 inherit hostName;
               };
@@ -430,7 +642,8 @@ in rec {
                   nixpkgsConfigModule
                   perSystemModule
                   path
-                ] ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
+                ]
+                ++ mkHomeUsersModule hostName home-manager.darwinModules.default;
                 specialArgs = specialArgs // {
                   inherit hostName;
                 };
@@ -556,19 +769,33 @@ in rec {
         }));
 
       # See the comment in mkEachSystem
-      unfilteredPackages =
-        lib.traceIf (builtins.pathExists (src + "/pkgs")) "blueprint: the /pkgs folder is now /packages"
-          (eachSystem ({ pkgs, ... }: mkPackagesFor pkgs));
+      unfilteredPackages = lib.traceIf (builtins.pathExists (
+        src + "/pkgs"
+      )) "blueprint: the /pkgs folder is now /packages" (eachSystem ({ pkgs, ... }: mkPackagesFor pkgs));
 
-      # Load the packages/ tree against a given nixpkgs instance.
-      # Packages get the same scope arguments as via systemArgs (pkgs,
-      # flake, inputs, system, perSystem, pname). perSystem.self resolves
-      # within this scope so intra-set references stay consistent with
-      # the supplied nixpkgs.
-      #
-      # Used internally for packages.<system> (with blueprint's own
-      # pkgs) and exposed so consumers can build an overlay that uses
-      # their pkgs instead.
+      /**
+        Load the `packages/` tree against a given nixpkgs instance.
+
+        Packages get the same scope arguments as via `systemArgs` (`pkgs`,
+        `flake`, `inputs`, `system`, `perSystem`, `pname`). `perSystem.self`
+        resolves within this scope so intra-set references stay consistent
+        with the supplied nixpkgs.
+
+        Used internally for `packages.<system>` (with Blueprint's own `pkgs`)
+        and exposed so consumers can build an overlay that uses their `pkgs`
+        instead.
+
+        # Type
+
+        ```
+        mkPackagesFor :: AttrSet -> AttrSet
+        ```
+
+        # Arguments
+
+        pkgs
+        : The nixpkgs instance to build the packages against.
+      */
       mkPackagesFor =
         pkgs:
         let
@@ -698,8 +925,12 @@ in rec {
       darwinConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.darwinConfigurations or { });
       nixosConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixosConfigurations or { });
       systemConfigs = lib.mapAttrs (_: x: x.value) (hostsByCategory.systemConfigs or { });
-      robotnixConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.robotnixConfigurations or { });
-      nixOnDroidConfigurations = lib.mapAttrs (_: x: x.value) (hostsByCategory.nixOnDroidConfigurations or { });
+      robotnixConfigurations = lib.mapAttrs (_: x: x.value) (
+        hostsByCategory.robotnixConfigurations or { }
+      );
+      nixOnDroidConfigurations = lib.mapAttrs (_: x: x.value) (
+        hostsByCategory.nixOnDroidConfigurations or { }
+      );
 
       inherit modules;
 
@@ -747,13 +978,17 @@ in rec {
             # add nixos system closures to checks
             (withPrefix "nixos-" (
               lib.mapAttrs (_: x: x.config.system.build.toplevel) (
-                lib.filterAttrs (_: x: x.pkgs.stdenv.hostPlatform.system == system) (inputs.self.nixosConfigurations or { })
+                lib.filterAttrs (_: x: x.pkgs.stdenv.hostPlatform.system == system) (
+                  inputs.self.nixosConfigurations or { }
+                )
               )
             ))
             # add darwin system closures to checks
             (withPrefix "darwin-" (
               lib.mapAttrs (_: x: x.system) (
-                lib.filterAttrs (_: x: x.pkgs.stdenv.hostPlatform.system == system) (inputs.self.darwinConfigurations or { })
+                lib.filterAttrs (_: x: x.pkgs.stdenv.hostPlatform.system == system) (
+                  inputs.self.darwinConfigurations or { }
+                )
               )
             ))
             # add system-manager closures to checks
@@ -797,7 +1032,40 @@ in rec {
       );
     };
 
-  # Create a new flake blueprint
+  /**
+    Create a new Blueprint flake.
+
+    This is the main entry point for consumers. It takes the project inputs,
+    an optional `prefix` under which the Blueprint folder structure lives,
+    nixpkgs configuration and a list of systems, and returns the generated
+    flake outputs.
+
+    # Type
+
+    ```
+    mkBlueprint :: {
+      inputs :: AttrSet,
+      prefix :: Path | String | null,
+      nixpkgs :: { config :: AttrSet; overlays :: [ Overlay ]; },
+      systems :: [ String ] | Path,
+    } -> AttrSet
+    ```
+
+    # Arguments
+
+    inputs
+    : The flake inputs. `inputs.self` is the flake being built.
+
+    prefix
+    : Optional sub-directory under `inputs.self` where the Blueprint
+      structure lives. Can be `null`, a `Path`, or a `String`.
+
+    nixpkgs
+    : nixpkgs configuration (`config` and/or `overlays`).
+
+    systems
+    : List of supported systems, or a path to a nix-systems file.
+  */
   mkBlueprint =
     {
       # Pass the flake inputs to blueprint
@@ -838,6 +1106,11 @@ in rec {
     };
   };
 
-  # Make this callable
+  /**
+    Make `lib.blueprint` callable as a function.
+
+    Calling `inputs.blueprint { inherit inputs; }` is equivalent to
+    `inputs.blueprint.lib.mkBlueprint { inherit inputs; }`.
+  */
   __functor = _: mkBlueprint;
 }
