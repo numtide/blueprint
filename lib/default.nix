@@ -341,7 +341,7 @@ in rec {
                     home.homeDirectory =
                       let
                         username = config.home.username;
-                        homeDir = if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
+                        homeDir = if pkgs.stdenv.hostPlatform.isDarwin then "/Users/${username}" else "/home/${username}";
                       in
                       lib.mkDefault homeDir;
                   }
