@@ -827,7 +827,7 @@ in rec {
         else
           throw "${builtins.typeOf prefix} is not supported for the prefix";
 
-      # Make compatible with github:nix-systems/default
+      # Make compatible with github:nix-systems/triplet
       systems = if lib.isList systems then systems else import systems;
     };
 
