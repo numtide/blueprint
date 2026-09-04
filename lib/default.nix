@@ -391,7 +391,7 @@ in rec {
                 }
               ) homesFlat
               // lib.mapAttrs (
-                username: modulePath: mkHomeConfiguration { inherit pkgs username modulePath; }
+                username: modulePath: mkHomeConfiguration { inherit pkgs username modulePath system; }
               ) homesGeneric;
           }
         );
