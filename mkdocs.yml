@@ -105,6 +105,20 @@ markdown_extensions:
     - pymdownx.snippets
     - pymdownx.keys
 
+nav:
+    - Home: index.md
+    - Getting Started:
+          - getting-started/install.md
+          - getting-started/folder_structure.md
+          - getting-started/built_in_templates.md
+          - getting-started/configuration.md
+    - Guides:
+          - guides/examples.md
+          - guides/configuring_direnv.md
+    - Contributing:
+          - contributing/code.md
+    - Library Reference: reference/lib_reference.md
+
 plugins:
     - awesome-pages
     - mike
