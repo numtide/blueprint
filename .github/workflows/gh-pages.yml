@@ -22,6 +22,9 @@ jobs:
               with:
                   fetch-depth: 0
             - uses: NixOS/nix-installer-action@main
+              with:
+                  extra-conf: |
+                      access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
             - name: Configure Git user
               run: |
                   git config --local user.email "github-actions[bot]@users.noreply.github.com"
