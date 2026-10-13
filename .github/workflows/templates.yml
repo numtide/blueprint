@@ -29,6 +29,9 @@ jobs:
         folder: ${{ fromJSON(needs.find-templates.outputs.folders) }}
     steps:
       - uses: NixOS/nix-installer-action@main
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v6
       - run: nix flake check --override-input blueprint ../..
         working-directory: ${{ matrix.folder }}
